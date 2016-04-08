@@ -86,7 +86,7 @@ type ParameterDeclaration struct {
 }
 
 %type<expression> external_declaration declaration function_definition
-%type<expression> expression add_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression
+%type<expression> expression add_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression
 %type<expressions> program
 %type<statements> statements
 %type<statement> statement compound_statement
@@ -94,7 +94,7 @@ type ParameterDeclaration struct {
 %type<declarators> declarators
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ
 
 %left '+'
 %left '*'
@@ -238,12 +238,31 @@ logical_and_expression
   }
 
 equal_expression
-  : add_expression
-  | add_expression EQL add_expression
+  : relation_expression
+  | relation_expression EQL relation_expression
   {
     $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
   }
-  | add_expression NEQ add_expression
+  | relation_expression NEQ relation_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+  }
+
+relation_expression
+  : add_expression
+  | add_expression '>' add_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: ">", right: $3}
+  }
+  | add_expression GEQ add_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+  }
+  | add_expression '<' add_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: "<", right: $3}
+  }
+  | add_expression LEQ add_expression
   {
     $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
   }
@@ -283,6 +302,8 @@ var tokenMap = map[token.Token]int {
   token.RETURN: RETURN,
   token.EQL: EQL,
   token.NEQ: NEQ,
+  token.GEQ: GEQ,
+  token.LEQ: LEQ,
 }
 
 func (l *Lexer) Lex(lval *yySymType) int {
@@ -303,6 +324,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
   case token.ADD, token.MUL,
     token.COMMA, token.SEMICOLON,
     token.ASSIGN,
+    token.GTR, token.LSS,
     token.LBRACK, token.RBRACK,
     token.LBRACE, token.RBRACE,
     token.LPAREN, token.RPAREN:
