@@ -28,3 +28,17 @@ func TestParseFunctionDefinition(t *testing.T) {
     }
   `)
 }
+
+func TestParseIfStatement(t *testing.T) {
+	Parse(`
+    int foo(int a) {
+      if (a == 0) a = 1;
+    }
+  `)
+
+	Parse(`
+    int foo(int a, int b) {
+      if (a && b) return 1;
+    }
+  `)
+}

@@ -69,7 +69,7 @@ type ParameterDeclaration struct {
 %union {
   token Token
 
-  expr Expression
+  expression Expression
   expressions []Expression
 
   declarator Declarator
@@ -82,7 +82,8 @@ type ParameterDeclaration struct {
   parameter_declaration ParameterDeclaration
 }
 
-%type<expr> external_declaration declaration function_definition expression  add_expression assign_expression primary_expression logical_or_expression
+%type<expression> external_declaration declaration function_definition
+%type<expression> expression add_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression
 %type<expressions> program
 %type<statements> statements compound_statement
 %type<statement> statement
@@ -90,7 +91,7 @@ type ParameterDeclaration struct {
 %type<declarators> declarators
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL
 
 %left '+'
 %left '*'
@@ -219,10 +220,24 @@ assign_expression
   }
 
 logical_or_expression
-  : add_expression
-  | add_expression LOGICAL_OR add_expression
+  : logical_and_expression
+  | logical_and_expression LOGICAL_OR logical_and_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: "||", right: $3}
+    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+  }
+
+logical_and_expression
+  : equal_expression
+  | equal_expression LOGICAL_AND equal_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+  }
+
+equal_expression
+  : add_expression
+  | add_expression EQL add_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: "==", right: $3}
   }
 
 add_expression
@@ -255,8 +270,10 @@ type Lexer struct {
 
 var tokenMap = map[token.Token]int {
   token.LOR: LOGICAL_OR,
+  token.LAND: LOGICAL_AND,
   token.IF: IF,
   token.RETURN: RETURN,
+  token.EQL: EQL,
 }
 
 func (l *Lexer) Lex(lval *yySymType) int {
