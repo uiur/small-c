@@ -8,6 +8,18 @@ func TestParseDeclaration(t *testing.T) {
 	Parse("int a[100];")
 }
 
+func TestParseCompoundStatement(t *testing.T) {
+	Parse(`
+    int foo() {
+      a = 1;
+      b = 2;
+      {
+        a = a + b;
+      };
+    }
+  `)
+}
+
 func TestParseFunctionDefinition(t *testing.T) {
 	Parse("int foo() {} \n")
 	Parse(`

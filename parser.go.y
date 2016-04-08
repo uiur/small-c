@@ -36,10 +36,13 @@ type Declaration struct {
 type FunctionDefinition struct {
   typeName string
   identifier string
-  statements []Statement
+  statement Statement
 }
 
 type Statement interface {}
+type CompoundStatement struct {
+  statements []Statement
+}
 
 type ExpressionStatement struct {
   expression Expression
@@ -85,8 +88,8 @@ type ParameterDeclaration struct {
 %type<expression> external_declaration declaration function_definition
 %type<expression> expression add_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression
 %type<expressions> program
-%type<statements> statements compound_statement
-%type<statement> statement
+%type<statements> statements
+%type<statement> statement compound_statement
 %type<declarator> declarator
 %type<declarators> declarators
 %type<parameters> parameters
@@ -144,11 +147,11 @@ external_declaration
 function_definition
   : TYPE IDENT '(' ')' compound_statement
   {
-    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statements: $5 }
+    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statement: $5 }
   }
   | TYPE IDENT '(' parameters ')' compound_statement
   {
-    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statements: $6 }
+    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statement: $6 }
   }
 
 parameters
@@ -170,17 +173,17 @@ parameter_declaration
 compound_statement
   : '{' '}'
   {
-    $$ = []Statement{}
+    $$ = CompoundStatement{}
   }
   | '{' statements '}'
   {
-    $$ =  $2
+    $$ =  CompoundStatement{ statements: $2 }
   }
 
 statements
   : statement
   {
-    $$ = []Statement{$1}
+    $$ = []Statement{ $1 }
   }
   | statements statement
   {
@@ -196,6 +199,7 @@ statement
   {
     $$ = ExpressionStatement{ expression: $1 }
   }
+  | compound_statement
   | IF '(' expression ')' statement
   {
     $$ = IfStatement{ expression: $3, statement: $5 }
