@@ -198,7 +198,7 @@ statement
   }
   | RETURN optional_expression ';'
   {
-    $$ = ReturnStatement{ Value: $1 }
+    $$ = ReturnStatement{ Value: $2 }
   }
 
 optional_expression: { $$ = nil }
