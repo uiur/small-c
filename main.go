@@ -22,6 +22,9 @@ func main() {
 		statements[i] = Walk(statement)
 	}
 
+	prelude, _ := Parse("void print(int i);\n")
+	statements = append(prelude, statements...)
+
 	pp.Print(statements)
 }
 
