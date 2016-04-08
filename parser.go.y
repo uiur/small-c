@@ -8,12 +8,13 @@ import (
 
 type Expression interface{}
 type Token struct {
-    token   int
-    literal string
+    tok token.Token
+    lit string
+    pos token.Pos
 }
 
 type NumExpr struct {
-    literal string
+    lit string
 }
 type BinOpExpr struct {
     left     Expression
@@ -21,16 +22,28 @@ type BinOpExpr struct {
     right    Expression
 }
 
+type Declarator struct {
+  identifier string
+}
+
+type Declaration struct {
+  varType string
+  declarators []Declarator
+}
+
 %}
 
 %union {
   token Token
   expr Expression
+  declarator Declarator
+  declarators []Declarator
 }
 
-%type<expr> program
-%type<expr> expr
-%token<token> NUMBER
+%type<expr> program declaration expr
+%type<declarator> declarator
+%type<declarators> declarators
+%token<token> NUMBER IDENT TYPE
 
 %left '+'
 %left '*'
@@ -38,16 +51,38 @@ type BinOpExpr struct {
 %%
 
 program
-  : expr
+  : declaration
   {
     $$ = $1
     yylex.(*Lexer).result = $$
   }
 
+declaration
+  : TYPE declarators ';'
+  {
+    $$ = Declaration{ varType: $1.lit, declarators: $2 }
+  }
+
+declarators
+  : declarator
+  {
+    $$ = []Declarator{ $1 }
+  }
+  | declarators ',' declarator
+  {
+    $$ = append($1, $3)
+  }
+
+declarator
+  : IDENT
+  {
+    $$ = Declarator{ identifier: $1.lit }
+  }
+
 expr
   : NUMBER
   {
-    $$ = NumExpr{ literal: $1.literal }
+    $$ = NumExpr{ lit: $1.lit }
   }
   | expr '+' expr
   {
@@ -66,19 +101,25 @@ type Lexer struct {
 }
 
 func (l *Lexer) Lex(lval *yySymType) int {
-  _, tok, lit := l.Scan()
+  pos, tok, lit := l.Scan()
   token_number := int(tok)
 
   switch tok {
   case token.INT:
     token_number = NUMBER
-  case token.ADD, token.MUL:
+  case token.ADD, token.MUL, token.COMMA, token.SEMICOLON:
     token_number = int(tok.String()[0])
+  case token.IDENT:
+    if lit == "int" {
+      token_number = TYPE
+    } else {
+      token_number = IDENT
+    }
   default:
     return 0
   }
 
-  lval.token = Token{ token: token_number, literal: lit }
+  lval.token = Token{ tok: tok, lit: lit, pos: pos }
 
   return token_number
 }

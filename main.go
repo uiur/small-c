@@ -8,12 +8,15 @@ import (
 )
 
 func main() {
-	src := []byte(os.Args[1])
+	Parse(os.Args[1])
+}
+
+func Parse(src string) {
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(src))
 
 	l := new(Lexer)
-	l.Init(file, src, nil, scanner.ScanComments)
+	l.Init(file, []byte(src), nil, scanner.ScanComments)
 	yyParse(l)
 	fmt.Printf("%#v\n", l.result)
 }
