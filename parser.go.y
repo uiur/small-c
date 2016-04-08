@@ -37,11 +37,13 @@ type Declaration struct {
 %union {
   token Token
   expr Expression
+  expressions []Expression
   declarator Declarator
   declarators []Declarator
 }
 
-%type<expr> program declaration expr
+%type<expr> declaration expr
+%type<expressions> program
 %type<declarator> declarator
 %type<declarators> declarators
 %token<token> NUMBER IDENT TYPE
@@ -54,7 +56,12 @@ type Declaration struct {
 program
   : declaration
   {
-    $$ = $1
+    $$ = []Expression{$1}
+    yylex.(*Lexer).result = $$
+  }
+  | program declaration
+  {
+    $$ = append($1, $2)
     yylex.(*Lexer).result = $$
   }
 
