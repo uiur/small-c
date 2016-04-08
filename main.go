@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/scanner"
 	"go/token"
 	"io/ioutil"
@@ -11,17 +12,26 @@ import (
 
 func main() {
 	data, _ := ioutil.ReadAll(os.Stdin)
-	expressions := Parse(string(data))
-	pp.Print(expressions)
+	statements, err := Parse(string(data))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	pp.Print(statements)
 }
 
-func Parse(src string) Expression {
+func Parse(src string) ([]Statement, error) {
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(src))
 
 	l := new(Lexer)
 	l.Init(file, []byte(src), nil, scanner.ScanComments)
-	yyParse(l)
 
-	return l.result
+	fail := yyParse(l)
+	if fail == 1 {
+		return nil, l.err
+	}
+
+	return l.result, nil
 }

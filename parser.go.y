@@ -6,6 +6,7 @@ import (
     "go/scanner"
     "go/token"
     "fmt"
+    "errors"
 )
 
 %}
@@ -26,11 +27,10 @@ import (
   parameter_declaration ParameterDeclaration
 }
 
-%type<expression> external_declaration declaration function_definition function_prototype identifier_expression identifier
+%type<expression> identifier_expression identifier
 %type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression postfix_expression
-%type<expressions> program
-%type<statements> statements declarations
-%type<statement> statement compound_statement
+%type<statements> statements declarations program
+%type<statement> statement compound_statement external_declaration declaration function_definition function_prototype
 %type<declarator> declarator
 %type<declarators> declarators
 %type<parameters> parameters optional_parameters
@@ -47,7 +47,7 @@ import (
 program
   : external_declaration
   {
-    $$ = []Expression{$1}
+    $$ = []Statement{$1}
     yylex.(*Lexer).result = $$
   }
   | program external_declaration
@@ -145,7 +145,7 @@ parameter_declaration
 compound_statement
   : '{' '}'
   {
-    $$ = CompoundStatement{}
+    $$ = nil
   }
   | '{' declarations '}'
   {
@@ -318,7 +318,8 @@ primary_expression
 
 type Lexer struct {
     scanner.Scanner
-    result Expression
+    result []Statement
+    err error
 }
 
 var tokenMap = map[token.Token]int {
@@ -387,5 +388,5 @@ func (l *Lexer) Lex(lval *yySymType) int {
 }
 
 func (l *Lexer) Error(e string) {
-  panic(e)
+  l.err = errors.New(e)
 }
