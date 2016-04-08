@@ -8,15 +8,17 @@ import (
 )
 
 func main() {
-	Parse(os.Args[1])
+	expressions := Parse(os.Args[1])
+	fmt.Printf("%#v\n", expressions)
 }
 
-func Parse(src string) {
+func Parse(src string) Expression {
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(src))
 
 	l := new(Lexer)
 	l.Init(file, []byte(src), nil, scanner.ScanComments)
 	yyParse(l)
-	fmt.Printf("%#v\n", l.result)
+
+	return l.result
 }

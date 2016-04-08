@@ -4,6 +4,7 @@ package main
 import (
     "go/scanner"
     "go/token"
+    "fmt"
 )
 
 type Expression interface{}
@@ -16,7 +17,7 @@ type Token struct {
 type NumExpr struct {
     lit string
 }
-type BinOpExpr struct {
+type BinOpExpression struct {
     left     Expression
     operator rune
     right    Expression
@@ -32,34 +33,57 @@ type Declaration struct {
   declarators []Declarator
 }
 
+type FunctionDefinition struct {
+  typeName string
+  identifier string
+  statements []Statement
+}
+
+type Statement struct {
+  expression Expression
+}
+
+type AssignExpression struct {
+  left Expression
+  right Expression
+}
+
 %}
 
 %union {
   token Token
+
   expr Expression
   expressions []Expression
+
   declarator Declarator
   declarators []Declarator
+
+  statement Statement
+  statements []Statement
 }
 
-%type<expr> declaration expr
+%type<expr> external_declaration declaration function_definition expression assign_expression primary_expression
 %type<expressions> program
+%type<statements> statements compound_statement
+%type<statement> statement
 %type<declarator> declarator
 %type<declarators> declarators
 %token<token> NUMBER IDENT TYPE
 
 %left '+'
 %left '*'
+%left '='
 
 %%
 
 program
-  : declaration
+  : external_declaration
   {
     $$ = []Expression{$1}
     yylex.(*Lexer).result = $$
   }
-  | program declaration
+  | program external_declaration
   {
     $$ = append($1, $2)
     yylex.(*Lexer).result = $$
@@ -91,18 +115,72 @@ declarator
     $$ = Declarator{ identifier: $1.lit, size: $3.lit }
   }
 
-expr
+external_declaration
+  : declaration
+  | function_definition
+
+function_definition
+  : TYPE IDENT '(' ')' compound_statement
+  {
+    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statements: $5 }
+  }
+
+compound_statement
+  : '{' '}'
+  {
+    $$ = []Statement{}
+  }
+  | '{' statements '}'
+  {
+    $$ =  $2
+  }
+
+statements
+  : statement
+  {
+    $$ = []Statement{$1}
+  }
+  | statements statement
+  {
+    $$ = append($1, $2)
+  }
+
+statement
+  : ';'
+  {
+    $$ = Statement{}
+  }
+  | assign_expression ';'
+  {
+    $$ = Statement{ expression: $1 }
+  }
+
+assign_expression
+  : expression '=' expression
+  {
+    $$ = AssignExpression{ left: $1, right: $3 }
+  }
+  ;
+
+expression
+  : primary_expression
+  | expression '+' expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: '+', right: $3 }
+  }
+  | expression '*' expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: '*', right: $3 }
+  }
+
+primary_expression
   : NUMBER
   {
     $$ = NumExpr{ lit: $1.lit }
   }
-  | expr '+' expr
+  | IDENT
   {
-    $$ = BinOpExpr{ left: $1, operator: '+', right: $3 }
-  }
-  | expr '*' expr
-  {
-    $$ = BinOpExpr{ left: $1, operator: '*', right: $3 }
+    $$ = NumExpr{ lit: $1.lit }
   }
 
 %%
@@ -116,10 +194,23 @@ func (l *Lexer) Lex(lval *yySymType) int {
   pos, tok, lit := l.Scan()
   token_number := int(tok)
 
+  fmt.Println(tok, lit)
+
   switch tok {
+  case token.EOF:
+    return -1
   case token.INT:
     token_number = NUMBER
-  case token.ADD, token.MUL, token.COMMA, token.SEMICOLON, token.LBRACK, token.RBRACK:
+  case token.ADD, token.MUL,
+    token.COMMA, token.SEMICOLON,
+    token.ASSIGN,
+    token.LBRACK, token.RBRACK,
+    token.LBRACE, token.RBRACE,
+    token.LPAREN, token.RPAREN:
+    // eof
+    if tok.String() == ";" && lit != ";" {
+      return -1
+    }
     token_number = int(tok.String()[0])
   case token.IDENT:
     if lit == "int" || lit == "void" {
@@ -128,7 +219,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
       token_number = IDENT
     }
   default:
-    return 0
+    return -1
   }
 
   lval.token = Token{ tok: tok, lit: lit, pos: pos }
