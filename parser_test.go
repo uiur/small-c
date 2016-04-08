@@ -62,6 +62,17 @@ func TestParseIfStatement(t *testing.T) {
   `)
 }
 
+func TestParseWhileStatement(t *testing.T) {
+	Parse(`
+    int main() {
+      a = 100;
+      while (a) {
+        a = a - 1;
+      }
+    }
+  `)
+}
+
 func TestParseUnaryExpression(t *testing.T) {
 	Parse(`
     int main() {

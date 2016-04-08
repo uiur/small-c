@@ -61,6 +61,11 @@ type IfStatement struct {
   falseStatement Statement
 }
 
+type WhileStatement struct {
+  condition Expression
+  statement Statement
+}
+
 type ReturnStatement struct {
   expression Expression
 }
@@ -103,7 +108,7 @@ type ParameterDeclaration struct {
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
 %type<token> unary_op
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE
 
 %left '+'
 %left '*'
@@ -216,6 +221,10 @@ statement
   | IF '(' expression ')' statement ELSE statement
   {
     $$ = IfStatement{ expression: $3, trueStatement: $5, falseStatement: $7 }
+  }
+  | WHILE '(' expression ')' statement
+  {
+    $$ = WhileStatement{ condition: $3, statement: $5 }
   }
   | RETURN ';'
   {
@@ -343,6 +352,16 @@ var tokenMap = map[token.Token]int {
   token.LEQ: LEQ,
 }
 
+func identToNumber(lit string) int {
+  if lit == "int" || lit == "void" {
+    return TYPE
+  } else if lit == "while" {
+    return WHILE
+  } else {
+    return IDENT
+  }
+}
+
 func (l *Lexer) Lex(lval *yySymType) int {
   pos, tok, lit := l.Scan()
   token_number := int(tok)
@@ -374,11 +393,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
     }
     token_number = int(tok.String()[0])
   case token.IDENT:
-    if lit == "int" || lit == "void" {
-      token_number = TYPE
-    } else {
-      token_number = IDENT
-    }
+    token_number = identToNumber(lit)
   default:
     return -1
   }
