@@ -17,6 +17,12 @@ type Token struct {
 type NumExpr struct {
     lit string
 }
+
+type UnaryExpression struct {
+  operator string
+  expression Expression
+}
+
 type BinOpExpression struct {
     left     Expression
     operator string
@@ -86,7 +92,7 @@ type ParameterDeclaration struct {
 }
 
 %type<expression> external_declaration declaration function_definition
-%type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression
+%type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression
 %type<expressions> program
 %type<statements> statements
 %type<statement> statement compound_statement
@@ -94,6 +100,7 @@ type ParameterDeclaration struct {
 %type<declarators> declarators
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
+%type<token> unary_op
 %token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ
 
 %left '+'
@@ -279,7 +286,7 @@ add_expression
   }
 
 mult_expression
-  : primary_expression
+  : unary_expression
   | mult_expression '*' primary_expression
   {
     $$ = BinOpExpression{ left: $1, operator: "*", right: $3 }
@@ -288,6 +295,18 @@ mult_expression
   {
     $$ = BinOpExpression{ left: $1, operator: "/", right: $3 }
   }
+
+unary_expression
+  : primary_expression
+  | unary_op unary_expression
+  {
+    $$ = UnaryExpression{ operator: $1.lit, expression: $2 }
+  }
+
+unary_op
+  : '-' { $$ = Token{ lit: "-" } }
+  | '&' { $$ = Token{ lit: "&" } }
+  | '*' { $$ = Token{ lit: "*" } }
 
 primary_expression
   : NUMBER
@@ -332,7 +351,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
     return -1
   case token.INT:
     token_number = NUMBER
-  case token.ADD, token.SUB, token.MUL, token.QUO,
+  case token.ADD, token.SUB, token.MUL, token.QUO, token.AND,
     token.COMMA, token.SEMICOLON,
     token.ASSIGN,
     token.GTR, token.LSS,

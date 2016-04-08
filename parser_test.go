@@ -54,3 +54,13 @@ func TestParseIfStatement(t *testing.T) {
     }
   `)
 }
+
+func TestParseUnaryExpression(t *testing.T) {
+	Parse(`
+    int main() {
+      a = &a;
+      a = -a;
+      a = *a;
+    }
+  `)
+}
