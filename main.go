@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"go/scanner"
 	"go/token"
+	"io/ioutil"
 	"os"
 )
 
 func main() {
-	expressions := Parse(os.Args[1])
+	data, _ := ioutil.ReadAll(os.Stdin)
+	expressions := Parse(string(data))
 	fmt.Printf("%#v\n", expressions)
 }
 
