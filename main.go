@@ -120,6 +120,22 @@ func WalkExpression(expression Expression) Expression {
 				Right:    e.Value,
 			}
 		}
+
+		return e
+
+	case ArrayReferenceExpression:
+		// a[100]  =>  *(a + 100)
+		e.Target = WalkExpression(e.Target)
+		e.Index = WalkExpression(e.Index)
+
+		return UnaryExpression{
+			Operator: "*",
+			Value: BinOpExpression{
+				Left:     e.Target,
+				Operator: "+",
+				Right:    e.Index,
+			},
+		}
 	}
 
 	return expression
