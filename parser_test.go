@@ -13,11 +13,13 @@ func TestParseDeclaration(t *testing.T) {
 func TestParseCompoundStatement(t *testing.T) {
 	Parse(`
     int foo() {
-      a = 1;
-      b = 2;
+      int a;
+
       {
         a = a + b;
       };
+
+      return b;
     }
   `)
 }

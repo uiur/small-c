@@ -42,7 +42,8 @@ type FunctionDefinition struct {
 
 type Statement interface{}
 type CompoundStatement struct {
-	statements []Statement
+	declarations []Statement
+	statements   []Statement
 }
 
 type ExpressionStatement struct {

@@ -29,7 +29,7 @@ import (
 %type<expression> external_declaration declaration function_definition
 %type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression
 %type<expressions> program
-%type<statements> statements
+%type<statements> statements declarations
 %type<statement> statement compound_statement
 %type<declarator> declarator
 %type<declarators> declarators
@@ -60,6 +60,16 @@ declaration
   : TYPE declarators ';'
   {
     $$ = Declaration{ varType: $1.lit, declarators: $2 }
+  }
+
+declarations
+  : declaration
+  {
+    $$ = []Statement{ $1 }
+  }
+  | declarations declaration
+  {
+    $$ = append($1, $2)
   }
 
 declarators
@@ -117,9 +127,17 @@ compound_statement
   {
     $$ = CompoundStatement{}
   }
+  | '{' declarations '}'
+  {
+    $$ = CompoundStatement{ declarations: $2 }
+  }
   | '{' statements '}'
   {
     $$ =  CompoundStatement{ statements: $2 }
+  }
+  | '{' declarations statements '}'
+  {
+    $$ =  CompoundStatement{ declarations: $2, statements: $3 }
   }
 
 statements
