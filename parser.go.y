@@ -86,7 +86,7 @@ type ParameterDeclaration struct {
 }
 
 %type<expression> external_declaration declaration function_definition
-%type<expression> expression add_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression
+%type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression
 %type<expressions> program
 %type<statements> statements
 %type<statement> statement compound_statement
@@ -254,13 +254,13 @@ relation_expression
   {
     $$ = BinOpExpression{ left: $1, operator: ">", right: $3}
   }
-  | add_expression GEQ add_expression
-  {
-    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
-  }
   | add_expression '<' add_expression
   {
     $$ = BinOpExpression{ left: $1, operator: "<", right: $3}
+  }
+  | add_expression GEQ add_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
   }
   | add_expression LEQ add_expression
   {
@@ -268,14 +268,25 @@ relation_expression
   }
 
 add_expression
-  : primary_expression
-  | add_expression '+' add_expression
+  : mult_expression
+  | add_expression '+' mult_expression
   {
     $$ = BinOpExpression{ left: $1, operator: "+", right: $3 }
   }
-  | add_expression '*' add_expression
+  | add_expression '-' mult_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: "-", right: $3 }
+  }
+
+mult_expression
+  : primary_expression
+  | mult_expression '*' primary_expression
   {
     $$ = BinOpExpression{ left: $1, operator: "*", right: $3 }
+  }
+  | mult_expression '/' primary_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: "/", right: $3 }
   }
 
 primary_expression
@@ -321,7 +332,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
     return -1
   case token.INT:
     token_number = NUMBER
-  case token.ADD, token.MUL,
+  case token.ADD, token.SUB, token.MUL, token.QUO,
     token.COMMA, token.SEMICOLON,
     token.ASSIGN,
     token.GTR, token.LSS,
