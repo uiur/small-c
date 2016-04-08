@@ -2,6 +2,7 @@
 package main
 
 import (
+    "os"
     "go/scanner"
     "go/token"
     "fmt"
@@ -56,7 +57,8 @@ type ExpressionStatement struct {
 
 type IfStatement struct {
   expression Expression
-  statement Statement
+  trueStatement Statement
+  falseStatement Statement
 }
 
 type ReturnStatement struct {
@@ -101,7 +103,7 @@ type ParameterDeclaration struct {
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
 %type<token> unary_op
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE
 
 %left '+'
 %left '*'
@@ -209,7 +211,11 @@ statement
   | compound_statement
   | IF '(' expression ')' statement
   {
-    $$ = IfStatement{ expression: $3, statement: $5 }
+    $$ = IfStatement{ expression: $3, trueStatement: $5 }
+  }
+  | IF '(' expression ')' statement ELSE statement
+  {
+    $$ = IfStatement{ expression: $3, trueStatement: $5, falseStatement: $7 }
   }
   | RETURN ';'
   {
@@ -329,6 +335,7 @@ var tokenMap = map[token.Token]int {
   token.LOR: LOGICAL_OR,
   token.LAND: LOGICAL_AND,
   token.IF: IF,
+  token.ELSE: ELSE,
   token.RETURN: RETURN,
   token.EQL: EQL,
   token.NEQ: NEQ,
@@ -340,7 +347,9 @@ func (l *Lexer) Lex(lval *yySymType) int {
   pos, tok, lit := l.Scan()
   token_number := int(tok)
 
-  fmt.Println(tok, lit)
+  if len(os.Getenv("DEBUG")) > 0 {
+    fmt.Println(tok, lit)
+  }
 
   if tokenMap[tok] > 0 {
     return tokenMap[tok]
@@ -358,9 +367,10 @@ func (l *Lexer) Lex(lval *yySymType) int {
     token.LBRACK, token.RBRACK,
     token.LBRACE, token.RBRACE,
     token.LPAREN, token.RPAREN:
-    // eof
+    // newline
     if tok.String() == ";" && lit != ";" {
-      return -1
+      // read next
+      return l.Lex(lval)
     }
     token_number = int(tok.String()[0])
   case token.IDENT:

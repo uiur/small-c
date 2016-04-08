@@ -3,9 +3,11 @@ package main
 import "testing"
 
 func TestParseDeclaration(t *testing.T) {
-	Parse("int foo; void bar;")
-	Parse("int a, b, c;")
-	Parse("int a[100];")
+	Parse(`
+    int foo, bar;
+    void baz;
+    int a[100];
+  `)
 }
 
 func TestParseCompoundStatement(t *testing.T) {
@@ -44,13 +46,18 @@ func TestParseIfStatement(t *testing.T) {
       if (a >= 0) a = 1;
       if (a < 0) a = 1;
       if (a <= 0) a = 1;
+      if (a && b) return 1;
+      if (a || b) return 1;
     }
   `)
 
 	Parse(`
-    int foo(int a, int b) {
-      if (a && b) return 1;
-      if (a || b) return 1;
+    int foo(int a) {
+      if (a) {
+        return 1;
+      } else {
+        return 0;
+      }
     }
   `)
 }
