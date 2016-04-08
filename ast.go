@@ -37,7 +37,14 @@ type Declaration struct {
 type FunctionDefinition struct {
 	typeName   string
 	identifier string
+	parameters []ParameterDeclaration
 	statement  Statement
+}
+
+type FunctionPrototype struct {
+	typeName   string
+	identifier string
+	parameters []ParameterDeclaration
 }
 
 type Statement interface{}

@@ -31,6 +31,8 @@ func TestParseDeclaration(t *testing.T) {
     int foo, bar;
     void baz;
     int a[100];
+
+    int sum(int a, int b);
   `)
 }
 

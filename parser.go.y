@@ -26,14 +26,14 @@ import (
   parameter_declaration ParameterDeclaration
 }
 
-%type<expression> external_declaration declaration function_definition
+%type<expression> external_declaration declaration function_definition function_prototype
 %type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression postfix_expression
 %type<expressions> program
 %type<statements> statements declarations
 %type<statement> statement compound_statement
 %type<declarator> declarator
 %type<declarators> declarators
-%type<parameters> parameters
+%type<parameters> parameters optional_parameters
 %type<parameter_declaration> parameter_declaration
 %type<token> unary_op
 %token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE FOR
@@ -95,16 +95,23 @@ declarator
 external_declaration
   : declaration
   | function_definition
+  | function_prototype
 
 function_definition
-  : TYPE IDENT '(' ')' compound_statement
+  : TYPE IDENT '(' optional_parameters ')' compound_statement
   {
-    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statement: $5 }
+    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, parameters: $4, statement: $6 }
   }
-  | TYPE IDENT '(' parameters ')' compound_statement
+
+function_prototype
+  : TYPE IDENT '(' optional_parameters ')' ';'
   {
-    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statement: $6 }
+    $$ = FunctionPrototype{ typeName: $1.lit, identifier: $2.lit, parameters: $4 }
   }
+
+optional_parameters
+  : { $$ = []ParameterDeclaration{} }
+  | parameters
 
 parameters
   : parameter_declaration
