@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestParse(t *testing.T) {
-	Parse(`
+	statements, err := Parse(`
     int data[8];
 
     int main() {
@@ -24,10 +24,29 @@ func TestParse(t *testing.T) {
       }
     }
   `)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if len(statements) == 0 {
+		t.Errorf("expect len(statements) > 0, actual: %v", len(statements))
+	}
+}
+
+func TestParseError(t *testing.T) {
+	_, err := Parse(`
+    wtf this is wtf
+  `)
+
+	if err == nil {
+		t.Errorf("expect syntax error, but success")
+	}
 }
 
 func TestParseDeclaration(t *testing.T) {
-	Parse(`
+	_, err := Parse(`
     int foo, bar;
     void baz;
     int a[100];
@@ -36,10 +55,14 @@ func TestParseDeclaration(t *testing.T) {
     int sum(int a, int b);
     int *foo();
   `)
+
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseCompoundStatement(t *testing.T) {
-	Parse(`
+	_, err := Parse(`
     int foo() {
       int a;
 
@@ -50,25 +73,26 @@ func TestParseCompoundStatement(t *testing.T) {
       return b;
     }
   `)
+
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseFunctionDefinition(t *testing.T) {
-	Parse("int foo() {} \n")
-	Parse(`
-    int foo() {
-      a = 1 + 2;
-    }
-  `)
-
-	Parse(`
+	_, err := Parse(`
     int sum(int a, int b) {
       return a + b;
     }
   `)
+
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseIfStatement(t *testing.T) {
-	Parse(`
+	_, err := Parse(`
     int foo(int a) {
       if (a == 0) a = 1;
       if (a != 0) a = 1;
@@ -81,19 +105,13 @@ func TestParseIfStatement(t *testing.T) {
     }
   `)
 
-	Parse(`
-    int foo(int a) {
-      if (a) {
-        return 1;
-      } else {
-        return 0;
-      }
-    }
-  `)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseWhileStatement(t *testing.T) {
-	Parse(`
+	_, err := Parse(`
     int main() {
       int a;
 
@@ -103,15 +121,15 @@ func TestParseWhileStatement(t *testing.T) {
       }
     }
   `)
+
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseForStatement(t *testing.T) {
-	Parse(`
+	statements, err := Parse(`
     int main() {
-      int i;
-      int sum;
-
-      sum = 0;
       for (i = 0; i < 100; i = i + 1) {
         sum = sum + i;
       }
@@ -121,14 +139,35 @@ func TestParseForStatement(t *testing.T) {
       }
     }
   `)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	switch mainStatements(statements)[0].(type) {
+	case ForStatement:
+	default:
+		t.Error("expected ForStatement")
+	}
+}
+
+func mainStatements(statements []Statement) []Statement {
+	main := statements[0].(FunctionDefinition)
+
+	return main.Statement.(CompoundStatement).Statements
 }
 
 func TestParseUnaryExpression(t *testing.T) {
-	Parse(`
+	_, err := Parse(`
     int main() {
       a = &a;
       a = -a;
       a = *a;
     }
   `)
+
+	if err != nil {
+		t.Error(err)
+	}
 }
