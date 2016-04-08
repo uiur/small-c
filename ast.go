@@ -61,6 +61,13 @@ type WhileStatement struct {
 	statement Statement
 }
 
+type ForStatement struct {
+	init      Expression
+	condition Expression
+	loop      Expression
+	statement Statement
+}
+
 type ReturnStatement struct {
 	expression Expression
 }

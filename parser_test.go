@@ -67,9 +67,29 @@ func TestParseIfStatement(t *testing.T) {
 func TestParseWhileStatement(t *testing.T) {
 	Parse(`
     int main() {
+      int a;
+
       a = 100;
       while (a) {
         a = a - 1;
+      }
+    }
+  `)
+}
+
+func TestParseForStatement(t *testing.T) {
+	Parse(`
+    int main() {
+      int i;
+      int sum;
+
+      sum = 0;
+      for (i = 0; i < 100; i = i + 1) {
+        sum = sum + i;
+      }
+
+      for (;;) {
+        return;
       }
     }
   `)

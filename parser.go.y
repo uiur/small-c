@@ -27,7 +27,7 @@ import (
 }
 
 %type<expression> external_declaration declaration function_definition
-%type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression
+%type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression
 %type<expressions> program
 %type<statements> statements declarations
 %type<statement> statement compound_statement
@@ -36,7 +36,7 @@ import (
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
 %type<token> unary_op
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE FOR
 
 %left '+'
 %left '*'
@@ -172,6 +172,10 @@ statement
   {
     $$ = WhileStatement{ condition: $3, statement: $5 }
   }
+  | FOR '(' optional_expression ';' optional_expression ';' optional_expression ')' statement
+  {
+    $$ = ForStatement{ init: $3, condition: $5, loop: $7, statement: $9 }
+  }
   | RETURN ';'
   {
     $$ = ReturnStatement{}
@@ -180,6 +184,9 @@ statement
   {
     $$ = ReturnStatement{ expression: $1 }
   }
+
+optional_expression: { $$ = nil }
+  | expression
 
 expression
   : assign_expression
@@ -296,14 +303,16 @@ var tokenMap = map[token.Token]int {
   token.NEQ: NEQ,
   token.GEQ: GEQ,
   token.LEQ: LEQ,
+  token.FOR: FOR,
 }
 
 func identToNumber(lit string) int {
-  if lit == "int" || lit == "void" {
+  switch lit {
+  case "int", "void":
     return TYPE
-  } else if lit == "while" {
+  case "while":
     return WHILE
-  } else {
+  default:
     return IDENT
   }
 }
