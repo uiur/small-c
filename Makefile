@@ -3,3 +3,6 @@ main: parser
 
 parser:
 	go tool yacc -o parser.go parser.go.y
+
+test:
+	go test -cover ./...
