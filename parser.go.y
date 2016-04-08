@@ -27,7 +27,7 @@ import (
 }
 
 %type<expression> external_declaration declaration function_definition
-%type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression
+%type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression postfix_expression
 %type<expressions> program
 %type<statements> statements declarations
 %type<statement> statement compound_statement
@@ -265,7 +265,7 @@ mult_expression
   }
 
 unary_expression
-  : primary_expression
+  : postfix_expression
   | unary_op unary_expression
   {
     $$ = UnaryExpression{ operator: $1.lit, expression: $2 }
@@ -276,6 +276,17 @@ unary_op
   | '&' { $$ = Token{ lit: "&" } }
   | '*' { $$ = Token{ lit: "*" } }
 
+postfix_expression
+  : primary_expression
+  | postfix_expression '[' expression ']'
+  {
+    $$ = ArrayReferenceExpression{ target: $1, index: $3 }
+  }
+  | IDENT '(' optional_expression ')'
+  {
+    $$ = FunctionCallExpression{ identifier: $1.lit, argument: $3  }
+  }
+
 primary_expression
   : NUMBER
   {
@@ -284,6 +295,10 @@ primary_expression
   | IDENT
   {
     $$ = NumExpr{ lit: $1.lit }
+  }
+  | '(' expression ')'
+  {
+    $$ = $2
   }
 
 %%

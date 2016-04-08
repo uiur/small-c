@@ -77,6 +77,16 @@ type AssignExpression struct {
 	right Expression
 }
 
+type FunctionCallExpression struct {
+	identifier string
+	argument   Expression
+}
+
+type ArrayReferenceExpression struct {
+	target Expression
+	index  Expression
+}
+
 type ParameterDeclaration struct {
 	typeName   string
 	identifier string
