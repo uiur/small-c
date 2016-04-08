@@ -29,18 +29,13 @@ import (
 
 %type<expression> identifier_expression identifier
 %type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression postfix_expression
-%type<statements> statements declarations program
+%type<statements> statements declarations optional_statements optional_declarations program
 %type<statement> statement compound_statement external_declaration declaration function_definition function_prototype
 %type<declarator> declarator
 %type<declarators> declarators
 %type<parameters> parameters optional_parameters
 %type<parameter_declaration> parameter_declaration
-%type<token> unary_op
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE FOR
-
-%left '+'
-%left '*'
-%left '='
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE FOR '-' '*' '&' '{'
 
 %%
 
@@ -59,7 +54,7 @@ program
 declaration
   : TYPE declarators ';'
   {
-    $$ = Declaration{ VarType: $1.lit, Declarators: $2 }
+    $$ = Declaration{ pos: $1.pos, VarType: $1.lit, Declarators: $2 }
   }
 
 declarations
@@ -100,26 +95,20 @@ external_declaration
 function_prototype
   : TYPE identifier_expression '(' optional_parameters ')' ';'
   {
-    $$ = FunctionPrototype{ TypeName: $1.lit, Identifier: $2, Parameters: $4 }
+    $$ = FunctionPrototype{ pos: $1.pos, TypeName: $1.lit, Identifier: $2, Parameters: $4 }
   }
 
 function_definition
   : TYPE identifier_expression '(' optional_parameters ')' compound_statement
   {
-    $$ = FunctionDefinition{ TypeName: $1.lit, Identifier: $2, Parameters: $4, Statement: $6 }
+    $$ = FunctionDefinition{ pos: $1.pos, TypeName: $1.lit, Identifier: $2, Parameters: $4, Statement: $6 }
   }
 
 identifier_expression
   : identifier
   | '*' identifier_expression
   {
-    $$ = PointerExpression{ Value: $2 }
-  }
-
-identifier
-  : IDENT
-  {
-    $$ = IdentifierExpression{ Name: $1.lit }
+    $$ = PointerExpression{ pos: $1.pos, Value: $2 }
   }
 
 optional_parameters
@@ -139,26 +128,22 @@ parameters
 parameter_declaration
   : TYPE identifier_expression
   {
-    $$ = ParameterDeclaration{ TypeName: $1.lit, Identifier: $2 }
+    $$ = ParameterDeclaration{ pos: $1.pos, TypeName: $1.lit, Identifier: $2 }
   }
 
 compound_statement
-  : '{' '}'
+  : '{' optional_declarations optional_statements '}'
   {
-    $$ = nil
+    $$ =  CompoundStatement{ pos: $1.pos, Declarations: $2, Statements: $3 }
   }
-  | '{' declarations '}'
-  {
-    $$ = CompoundStatement{ Declarations: $2 }
-  }
-  | '{' statements '}'
-  {
-    $$ =  CompoundStatement{ Statements: $2 }
-  }
-  | '{' declarations statements '}'
-  {
-    $$ =  CompoundStatement{ Declarations: $2, Statements: $3 }
-  }
+
+optional_declarations
+  : { $$ = nil }
+  | declarations
+
+optional_statements
+  : { $$ = nil }
+  | statements
 
 statements
   : statement
@@ -182,23 +167,23 @@ statement
   | compound_statement
   | IF '(' expression ')' statement
   {
-    $$ = IfStatement{ Condition: $3, TrueStatement: $5 }
+    $$ = IfStatement{ pos: $1.pos, Condition: $3, TrueStatement: $5 }
   }
   | IF '(' expression ')' statement ELSE statement
   {
-    $$ = IfStatement{ Condition: $3, TrueStatement: $5, FalseStatement: $7 }
+    $$ = IfStatement{ pos: $1.pos, Condition: $3, TrueStatement: $5, FalseStatement: $7 }
   }
   | WHILE '(' expression ')' statement
   {
-    $$ = WhileStatement{ Condition: $3, Statement: $5 }
+    $$ = WhileStatement{ pos: $1.pos, Condition: $3, Statement: $5 }
   }
   | FOR '(' optional_expression ';' optional_expression ';' optional_expression ')' statement
   {
-    $$ = ForStatement{ Init: $3, Condition: $5, Loop: $7, Statement: $9 }
+    $$ = ForStatement{ pos: $1.pos, Init: $3, Condition: $5, Loop: $7, Statement: $9 }
   }
   | RETURN optional_expression ';'
   {
-    $$ = ReturnStatement{ Value: $2 }
+    $$ = ReturnStatement{ pos: $1.pos, Value: $2 }
   }
 
 optional_expression: { $$ = nil }
@@ -282,15 +267,18 @@ mult_expression
 
 unary_expression
   : postfix_expression
-  | unary_op unary_expression
+  | '-' unary_expression
   {
-    $$ = UnaryExpression{ Operator: $1.lit, Expression: $2 }
+    $$ = UnaryExpression{ pos: $1.pos, Operator: $1.lit, Expression: $2 }
   }
-
-unary_op
-  : '-' { $$ = Token{ lit: "-" } }
-  | '&' { $$ = Token{ lit: "&" } }
-  | '*' { $$ = Token{ lit: "*" } }
+  | '&' unary_expression
+  {
+    $$ = UnaryExpression{ pos: $1.pos, Operator: $1.lit, Expression: $2 }
+  }
+  | '*' unary_expression
+  {
+    $$ = UnaryExpression{ pos: $1.pos, Operator: $1.lit, Expression: $2 }
+  }
 
 postfix_expression
   : primary_expression
@@ -298,20 +286,26 @@ postfix_expression
   {
     $$ = ArrayReferenceExpression{ Target: $1, Index: $3 }
   }
-  | IDENT '(' optional_expression ')'
+  | identifier '(' optional_expression ')'
   {
-    $$ = FunctionCallExpression{ Identifier: $1.lit, Argument: $3  }
+    $$ = FunctionCallExpression{ Identifier: $1, Argument: $3  }
   }
 
 primary_expression
   : NUMBER
   {
-    $$ = NumberExpression{ Value: $1.lit }
+    $$ = NumberExpression{ pos: $1.pos, Value: $1.lit }
   }
   | identifier
   | '(' expression ')'
   {
     $$ = $2
+  }
+
+identifier
+  : IDENT
+  {
+    $$ = IdentifierExpression{ pos: $1.pos, Name: $1.lit }
   }
 
 %%
