@@ -26,7 +26,7 @@ import (
   parameter_declaration ParameterDeclaration
 }
 
-%type<expression> external_declaration declaration function_definition function_prototype
+%type<expression> external_declaration declaration function_definition function_prototype identifier_expression identifier
 %type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression postfix_expression
 %type<expressions> program
 %type<statements> statements declarations
@@ -83,30 +83,43 @@ declarators
   }
 
 declarator
-  : IDENT
+  : identifier_expression
   {
-    $$ = Declarator{ identifier: $1.lit }
+    $$ = Declarator{ identifier: $1 }
   }
-  | IDENT '[' NUMBER ']'
+  | identifier_expression '[' NUMBER ']'
   {
-    $$ = Declarator{ identifier: $1.lit, size: $3.lit }
+    $$ = Declarator{ identifier: $1, size: $3.lit }
   }
 
 external_declaration
   : declaration
-  | function_definition
   | function_prototype
-
-function_definition
-  : TYPE IDENT '(' optional_parameters ')' compound_statement
-  {
-    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, parameters: $4, statement: $6 }
-  }
+  | function_definition
 
 function_prototype
-  : TYPE IDENT '(' optional_parameters ')' ';'
+  : TYPE identifier_expression '(' optional_parameters ')' ';'
   {
-    $$ = FunctionPrototype{ typeName: $1.lit, identifier: $2.lit, parameters: $4 }
+    $$ = FunctionPrototype{ typeName: $1.lit, identifier: $2, parameters: $4 }
+  }
+
+function_definition
+  : TYPE identifier_expression '(' optional_parameters ')' compound_statement
+  {
+    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2, parameters: $4, statement: $6 }
+  }
+
+identifier_expression
+  : identifier
+  | '*' identifier_expression
+  {
+    $$ = PointerExpression{ expression: $2 }
+  }
+
+identifier
+  : IDENT
+  {
+    $$ = IdentifierExpression{ name: $1.lit }
   }
 
 optional_parameters
@@ -124,9 +137,9 @@ parameters
   }
 
 parameter_declaration
-  : TYPE IDENT
+  : TYPE identifier_expression
   {
-    $$ = ParameterDeclaration{ typeName: $1.lit, identifier: $2.lit }
+    $$ = ParameterDeclaration{ typeName: $1.lit, identifier: $2 }
   }
 
 compound_statement
@@ -183,11 +196,7 @@ statement
   {
     $$ = ForStatement{ init: $3, condition: $5, loop: $7, statement: $9 }
   }
-  | RETURN ';'
-  {
-    $$ = ReturnStatement{}
-  }
-  | RETURN expression ';'
+  | RETURN optional_expression ';'
   {
     $$ = ReturnStatement{ expression: $1 }
   }
@@ -297,12 +306,9 @@ postfix_expression
 primary_expression
   : NUMBER
   {
-    $$ = NumExpr{ lit: $1.lit }
+    $$ = NumberExpression{ lit: $1.lit }
   }
-  | IDENT
-  {
-    $$ = NumExpr{ lit: $1.lit }
-  }
+  | identifier
   | '(' expression ')'
   {
     $$ = $2

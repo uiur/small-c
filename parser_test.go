@@ -31,8 +31,10 @@ func TestParseDeclaration(t *testing.T) {
     int foo, bar;
     void baz;
     int a[100];
+    int *pointer;
 
     int sum(int a, int b);
+    int *foo();
   `)
 }
 

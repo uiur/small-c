@@ -9,8 +9,12 @@ type Token struct {
 	pos token.Pos
 }
 
-type NumExpr struct {
+type NumberExpression struct {
 	lit string
+}
+
+type IdentifierExpression struct {
+	name string
 }
 
 type UnaryExpression struct {
@@ -25,7 +29,7 @@ type BinOpExpression struct {
 }
 
 type Declarator struct {
-	identifier string
+	identifier Expression
 	size       string
 }
 
@@ -36,14 +40,14 @@ type Declaration struct {
 
 type FunctionDefinition struct {
 	typeName   string
-	identifier string
+	identifier Expression
 	parameters []ParameterDeclaration
 	statement  Statement
 }
 
 type FunctionPrototype struct {
 	typeName   string
-	identifier string
+	identifier Expression
 	parameters []ParameterDeclaration
 }
 
@@ -96,5 +100,9 @@ type ArrayReferenceExpression struct {
 
 type ParameterDeclaration struct {
 	typeName   string
-	identifier string
+	identifier Expression
+}
+
+type PointerExpression struct {
+	expression Expression
 }

@@ -1,10 +1,10 @@
-main: parser
+main: parser.go
 	go build
 
-parser:
+parser.go: parser.go.y
 	go tool yacc -o parser.go parser.go.y
 
-test:
+test: parser.go
 	go test -cover ./...
 
 .PHONY: test
