@@ -10,99 +10,99 @@ type Token struct {
 }
 
 type NumberExpression struct {
-	lit string
+	Value string
 }
 
 type IdentifierExpression struct {
-	name string
+	Name string
 }
 
 type UnaryExpression struct {
-	operator   string
-	expression Expression
+	Operator   string
+	Expression Expression
 }
 
 type BinOpExpression struct {
-	left     Expression
-	operator string
-	right    Expression
+	Left     Expression
+	Operator string
+	Right    Expression
 }
 
 type Declarator struct {
-	identifier Expression
-	size       string
+	Identifier Expression
+	Size       string
 }
 
 type Declaration struct {
-	varType     string
-	declarators []Declarator
+	VarType     string
+	Declarators []Declarator
 }
 
 type FunctionDefinition struct {
-	typeName   string
-	identifier Expression
-	parameters []ParameterDeclaration
-	statement  Statement
+	TypeName   string
+	Identifier Expression
+	Parameters []ParameterDeclaration
+	Statement  Statement
 }
 
 type FunctionPrototype struct {
-	typeName   string
-	identifier Expression
-	parameters []ParameterDeclaration
+	TypeName   string
+	Identifier Expression
+	Parameters []ParameterDeclaration
 }
 
 type Statement interface{}
 type CompoundStatement struct {
-	declarations []Statement
-	statements   []Statement
+	Declarations []Statement
+	Statements   []Statement
 }
 
 type ExpressionStatement struct {
-	expression Expression
+	Value Expression
 }
 
 type IfStatement struct {
-	expression     Expression
-	trueStatement  Statement
-	falseStatement Statement
+	Condition      Expression
+	TrueStatement  Statement
+	FalseStatement Statement
 }
 
 type WhileStatement struct {
-	condition Expression
-	statement Statement
+	Condition Expression
+	Statement Statement
 }
 
 type ForStatement struct {
-	init      Expression
-	condition Expression
-	loop      Expression
-	statement Statement
+	Init      Expression
+	Condition Expression
+	Loop      Expression
+	Statement Statement
 }
 
 type ReturnStatement struct {
-	expression Expression
+	Value Expression
 }
 
 type AssignExpression struct {
-	left  Expression
-	right Expression
+	Left  Expression
+	Right Expression
 }
 
 type FunctionCallExpression struct {
-	identifier string
-	argument   Expression
+	Identifier string
+	Argument   Expression
 }
 
 type ArrayReferenceExpression struct {
-	target Expression
-	index  Expression
+	Target Expression
+	Index  Expression
 }
 
 type ParameterDeclaration struct {
-	typeName   string
-	identifier Expression
+	TypeName   string
+	Identifier Expression
 }
 
 type PointerExpression struct {
-	expression Expression
+	Value Expression
 }

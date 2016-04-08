@@ -59,7 +59,7 @@ program
 declaration
   : TYPE declarators ';'
   {
-    $$ = Declaration{ varType: $1.lit, declarators: $2 }
+    $$ = Declaration{ VarType: $1.lit, Declarators: $2 }
   }
 
 declarations
@@ -85,11 +85,11 @@ declarators
 declarator
   : identifier_expression
   {
-    $$ = Declarator{ identifier: $1 }
+    $$ = Declarator{ Identifier: $1 }
   }
   | identifier_expression '[' NUMBER ']'
   {
-    $$ = Declarator{ identifier: $1, size: $3.lit }
+    $$ = Declarator{ Identifier: $1, Size: $3.lit }
   }
 
 external_declaration
@@ -100,26 +100,26 @@ external_declaration
 function_prototype
   : TYPE identifier_expression '(' optional_parameters ')' ';'
   {
-    $$ = FunctionPrototype{ typeName: $1.lit, identifier: $2, parameters: $4 }
+    $$ = FunctionPrototype{ TypeName: $1.lit, Identifier: $2, Parameters: $4 }
   }
 
 function_definition
   : TYPE identifier_expression '(' optional_parameters ')' compound_statement
   {
-    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2, parameters: $4, statement: $6 }
+    $$ = FunctionDefinition{ TypeName: $1.lit, Identifier: $2, Parameters: $4, Statement: $6 }
   }
 
 identifier_expression
   : identifier
   | '*' identifier_expression
   {
-    $$ = PointerExpression{ expression: $2 }
+    $$ = PointerExpression{ Value: $2 }
   }
 
 identifier
   : IDENT
   {
-    $$ = IdentifierExpression{ name: $1.lit }
+    $$ = IdentifierExpression{ Name: $1.lit }
   }
 
 optional_parameters
@@ -139,7 +139,7 @@ parameters
 parameter_declaration
   : TYPE identifier_expression
   {
-    $$ = ParameterDeclaration{ typeName: $1.lit, identifier: $2 }
+    $$ = ParameterDeclaration{ TypeName: $1.lit, Identifier: $2 }
   }
 
 compound_statement
@@ -149,15 +149,15 @@ compound_statement
   }
   | '{' declarations '}'
   {
-    $$ = CompoundStatement{ declarations: $2 }
+    $$ = CompoundStatement{ Declarations: $2 }
   }
   | '{' statements '}'
   {
-    $$ =  CompoundStatement{ statements: $2 }
+    $$ =  CompoundStatement{ Statements: $2 }
   }
   | '{' declarations statements '}'
   {
-    $$ =  CompoundStatement{ declarations: $2, statements: $3 }
+    $$ =  CompoundStatement{ Declarations: $2, Statements: $3 }
   }
 
 statements
@@ -173,32 +173,32 @@ statements
 statement
   : ';'
   {
-    $$ = ExpressionStatement{}
+    $$ = nil
   }
   | expression ';'
   {
-    $$ = ExpressionStatement{ expression: $1 }
+    $$ = ExpressionStatement{ Value: $1 }
   }
   | compound_statement
   | IF '(' expression ')' statement
   {
-    $$ = IfStatement{ expression: $3, trueStatement: $5 }
+    $$ = IfStatement{ Condition: $3, TrueStatement: $5 }
   }
   | IF '(' expression ')' statement ELSE statement
   {
-    $$ = IfStatement{ expression: $3, trueStatement: $5, falseStatement: $7 }
+    $$ = IfStatement{ Condition: $3, TrueStatement: $5, FalseStatement: $7 }
   }
   | WHILE '(' expression ')' statement
   {
-    $$ = WhileStatement{ condition: $3, statement: $5 }
+    $$ = WhileStatement{ Condition: $3, Statement: $5 }
   }
   | FOR '(' optional_expression ';' optional_expression ';' optional_expression ')' statement
   {
-    $$ = ForStatement{ init: $3, condition: $5, loop: $7, statement: $9 }
+    $$ = ForStatement{ Init: $3, Condition: $5, Loop: $7, Statement: $9 }
   }
   | RETURN optional_expression ';'
   {
-    $$ = ReturnStatement{ expression: $1 }
+    $$ = ReturnStatement{ Value: $1 }
   }
 
 optional_expression: { $$ = nil }
@@ -211,80 +211,80 @@ assign_expression
   : logical_or_expression
   | logical_or_expression '=' logical_or_expression
   {
-    $$ = AssignExpression{ left: $1, right: $3 }
+    $$ = AssignExpression{ Left: $1, Right: $3 }
   }
 
 logical_or_expression
   : logical_and_expression
   | logical_and_expression LOGICAL_OR logical_and_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 logical_and_expression
   : equal_expression
   | equal_expression LOGICAL_AND equal_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 equal_expression
   : relation_expression
   | relation_expression EQL relation_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
   | relation_expression NEQ relation_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 relation_expression
   : add_expression
   | add_expression '>' add_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: ">", right: $3}
+    $$ = BinOpExpression{ Left: $1, Operator: ">", Right: $3}
   }
   | add_expression '<' add_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: "<", right: $3}
+    $$ = BinOpExpression{ Left: $1, Operator: "<", Right: $3}
   }
   | add_expression GEQ add_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
   | add_expression LEQ add_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 add_expression
   : mult_expression
   | add_expression '+' mult_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: "+", right: $3 }
+    $$ = BinOpExpression{ Left: $1, Operator: "+", Right: $3 }
   }
   | add_expression '-' mult_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: "-", right: $3 }
+    $$ = BinOpExpression{ Left: $1, Operator: "-", Right: $3 }
   }
 
 mult_expression
   : unary_expression
   | mult_expression '*' primary_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: "*", right: $3 }
+    $$ = BinOpExpression{ Left: $1, Operator: "*", Right: $3 }
   }
   | mult_expression '/' primary_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: "/", right: $3 }
+    $$ = BinOpExpression{ Left: $1, Operator: "/", Right: $3 }
   }
 
 unary_expression
   : postfix_expression
   | unary_op unary_expression
   {
-    $$ = UnaryExpression{ operator: $1.lit, expression: $2 }
+    $$ = UnaryExpression{ Operator: $1.lit, Expression: $2 }
   }
 
 unary_op
@@ -296,17 +296,17 @@ postfix_expression
   : primary_expression
   | postfix_expression '[' expression ']'
   {
-    $$ = ArrayReferenceExpression{ target: $1, index: $3 }
+    $$ = ArrayReferenceExpression{ Target: $1, Index: $3 }
   }
   | IDENT '(' optional_expression ')'
   {
-    $$ = FunctionCallExpression{ identifier: $1.lit, argument: $3  }
+    $$ = FunctionCallExpression{ Identifier: $1.lit, Argument: $3  }
   }
 
 primary_expression
   : NUMBER
   {
-    $$ = NumberExpression{ lit: $1.lit }
+    $$ = NumberExpression{ Value: $1.lit }
   }
   | identifier
   | '(' expression ')'

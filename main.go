@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/xml"
 	"fmt"
 	"go/scanner"
 	"go/token"
@@ -11,7 +12,9 @@ import (
 func main() {
 	data, _ := ioutil.ReadAll(os.Stdin)
 	expressions := Parse(string(data))
-	fmt.Printf("%#v\n", expressions)
+	buf, _ := xml.MarshalIndent(expressions, "", "  ")
+	fmt.Println(string(buf))
+	// fmt.Printf("%#v\n", expressions)
 }
 
 func Parse(src string) Expression {
