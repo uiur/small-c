@@ -24,6 +24,7 @@ type BinOpExpr struct {
 
 type Declarator struct {
   identifier string
+  size string
 }
 
 type Declaration struct {
@@ -78,6 +79,10 @@ declarator
   {
     $$ = Declarator{ identifier: $1.lit }
   }
+  | IDENT '[' NUMBER ']'
+  {
+    $$ = Declarator{ identifier: $1.lit, size: $3.lit }
+  }
 
 expr
   : NUMBER
@@ -107,10 +112,10 @@ func (l *Lexer) Lex(lval *yySymType) int {
   switch tok {
   case token.INT:
     token_number = NUMBER
-  case token.ADD, token.MUL, token.COMMA, token.SEMICOLON:
+  case token.ADD, token.MUL, token.COMMA, token.SEMICOLON, token.LBRACK, token.RBRACK:
     token_number = int(tok.String()[0])
   case token.IDENT:
-    if lit == "int" {
+    if lit == "int" || lit == "void" {
       token_number = TYPE
     } else {
       token_number = IDENT
