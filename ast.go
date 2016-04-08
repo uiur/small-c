@@ -27,9 +27,9 @@ type IdentifierExpression struct {
 func (e *IdentifierExpression) Pos() token.Pos { return e.pos }
 
 type UnaryExpression struct {
-	pos        token.Pos
-	Operator   string
-	Expression Expression
+	pos      token.Pos
+	Operator string
+	Value    Expression
 }
 
 func (e *UnaryExpression) Pos() token.Pos { return e.pos }
@@ -71,20 +71,11 @@ type FunctionDefinition struct {
 	pos        token.Pos
 	TypeName   string
 	Identifier Expression
-	Parameters []ParameterDeclaration
+	Parameters []Expression
 	Statement  Statement
 }
 
 func (e *FunctionDefinition) Pos() token.Pos { return e.pos }
-
-type FunctionPrototype struct {
-	pos        token.Pos
-	TypeName   string
-	Identifier Expression
-	Parameters []ParameterDeclaration
-}
-
-func (e *FunctionPrototype) Pos() token.Pos { return e.pos }
 
 type Statement interface{}
 type CompoundStatement struct {
@@ -141,16 +132,6 @@ type ReturnStatement struct {
 }
 
 func (e *ReturnStatement) Pos() token.Pos { return e.pos }
-
-type AssignExpression struct {
-	Left  Expression
-	Right Expression
-}
-
-func (e *AssignExpression) Pos() token.Pos {
-	left := e.Left.(Node)
-	return left.Pos()
-}
 
 type FunctionCallExpression struct {
 	Identifier Expression

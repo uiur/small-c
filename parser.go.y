@@ -23,17 +23,17 @@ import (
   statement Statement
   statements []Statement
 
-  parameters []ParameterDeclaration
   parameter_declaration ParameterDeclaration
 }
 
 %type<expression> identifier_expression identifier
-%type<expression> expression add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression postfix_expression
+%type<expression> expression
+%type<expression> add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression postfix_expression
+%type<expressions> parameters optional_parameters
 %type<statements> statements declarations optional_statements optional_declarations program
 %type<statement> statement compound_statement external_declaration declaration function_definition function_prototype
 %type<declarator> declarator
 %type<declarators> declarators
-%type<parameters> parameters optional_parameters
 %type<parameter_declaration> parameter_declaration
 %token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE FOR '-' '*' '&' '{'
 
@@ -51,11 +51,10 @@ program
     yylex.(*Lexer).result = $$
   }
 
-declaration
-  : TYPE declarators ';'
-  {
-    $$ = Declaration{ pos: $1.pos, VarType: $1.lit, Declarators: $2 }
-  }
+external_declaration
+  : declaration
+  | function_prototype
+  | function_definition
 
 declarations
   : declaration
@@ -65,6 +64,12 @@ declarations
   | declarations declaration
   {
     $$ = append($1, $2)
+  }
+
+declaration
+  : TYPE declarators ';'
+  {
+    $$ = Declaration{ pos: $1.pos, VarType: $1.lit, Declarators: $2 }
   }
 
 declarators
@@ -87,15 +92,10 @@ declarator
     $$ = Declarator{ Identifier: $1, Size: $3.lit }
   }
 
-external_declaration
-  : declaration
-  | function_prototype
-  | function_definition
-
 function_prototype
   : TYPE identifier_expression '(' optional_parameters ')' ';'
   {
-    $$ = FunctionPrototype{ pos: $1.pos, TypeName: $1.lit, Identifier: $2, Parameters: $4 }
+    $$ = FunctionDefinition{ pos: $1.pos, TypeName: $1.lit, Identifier: $2, Parameters: $4 }
   }
 
 function_definition
@@ -108,17 +108,17 @@ identifier_expression
   : identifier
   | '*' identifier_expression
   {
-    $$ = PointerExpression{ pos: $1.pos, Value: $2 }
+    $$ = UnaryExpression{ pos: $1.pos, Operator: "*", Value: $2 }
   }
 
 optional_parameters
-  : { $$ = []ParameterDeclaration{} }
+  : { $$ = nil }
   | parameters
 
 parameters
   : parameter_declaration
   {
-    $$ = []ParameterDeclaration{ $1 }
+    $$ = []Expression{ $1 }
   }
   | parameters ',' parameter_declaration
   {
@@ -196,7 +196,7 @@ assign_expression
   : logical_or_expression
   | logical_or_expression '=' logical_or_expression
   {
-    $$ = AssignExpression{ Left: $1, Right: $3 }
+    $$ = BinOpExpression{ Left: $1, Operator: "=", Right: $3 }
   }
 
 logical_or_expression
@@ -269,15 +269,15 @@ unary_expression
   : postfix_expression
   | '-' unary_expression
   {
-    $$ = UnaryExpression{ pos: $1.pos, Operator: $1.lit, Expression: $2 }
+    $$ = UnaryExpression{ pos: $1.pos, Operator: "-", Value: $2 }
   }
   | '&' unary_expression
   {
-    $$ = UnaryExpression{ pos: $1.pos, Operator: $1.lit, Expression: $2 }
+    $$ = UnaryExpression{ pos: $1.pos, Operator: "&", Value: $2 }
   }
   | '*' unary_expression
   {
-    $$ = UnaryExpression{ pos: $1.pos, Operator: $1.lit, Expression: $2 }
+    $$ = UnaryExpression{ pos: $1.pos, Operator: "*", Value: $2 }
   }
 
 postfix_expression
