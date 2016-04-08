@@ -119,6 +119,14 @@ func WalkExpression(expression Expression) Expression {
 				Operator: "-",
 				Right:    e.Value,
 			}
+		} else if e.Operator == "&" {
+			// &(*e) -> e
+			switch value := e.Value.(type) {
+			case UnaryExpression:
+				if value.Operator == "*" {
+					return value.Value
+				}
+			}
 		}
 
 		return e
