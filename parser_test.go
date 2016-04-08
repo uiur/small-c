@@ -21,4 +21,10 @@ func TestParseFunctionDefinition(t *testing.T) {
       a = 1 + 2;
     }
   `)
+
+	Parse(`
+    int foo(int a) {
+      if (a) a = 1;
+    }
+  `)
 }

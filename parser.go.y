@@ -19,7 +19,7 @@ type NumExpr struct {
 }
 type BinOpExpression struct {
     left     Expression
-    operator rune
+    operator string
     right    Expression
 }
 
@@ -39,8 +39,15 @@ type FunctionDefinition struct {
   statements []Statement
 }
 
-type Statement struct {
+type Statement interface {}
+
+type ExpressionStatement struct {
   expression Expression
+}
+
+type IfStatement struct {
+  expression Expression
+  statement Statement
 }
 
 type AssignExpression struct {
@@ -71,7 +78,7 @@ type ParameterDeclaration struct {
   parameter_declaration ParameterDeclaration
 }
 
-%type<expr> external_declaration declaration function_definition expression assign_expression primary_expression
+%type<expr> external_declaration declaration function_definition expression  add_expression assign_expression primary_expression logical_or_expression
 %type<expressions> program
 %type<statements> statements compound_statement
 %type<statement> statement
@@ -79,7 +86,7 @@ type ParameterDeclaration struct {
 %type<declarators> declarators
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
-%token<token> NUMBER IDENT TYPE
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND
 
 %left '+'
 %left '*'
@@ -178,29 +185,43 @@ statements
 statement
   : ';'
   {
-    $$ = Statement{}
+    $$ = ExpressionStatement{}
   }
-  | assign_expression ';'
+  | expression ';'
   {
-    $$ = Statement{ expression: $1 }
+    $$ = ExpressionStatement{ expression: $1 }
+  }
+  | IF '(' expression ')' statement
+  {
+    $$ = IfStatement{ expression: $3, statement: $5 }
   }
 
+expression
+  : assign_expression
+
 assign_expression
-  : expression '=' expression
+  : logical_or_expression
+  | logical_or_expression '=' logical_or_expression
   {
     $$ = AssignExpression{ left: $1, right: $3 }
   }
-  ;
 
-expression
-  : primary_expression
-  | expression '+' expression
+logical_or_expression
+  : add_expression
+  | add_expression LOGICAL_OR add_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: '+', right: $3 }
+    $$ = BinOpExpression{ left: $1, operator: "||", right: $3}
   }
-  | expression '*' expression
+
+add_expression
+  : primary_expression
+  | add_expression '+' add_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: '*', right: $3 }
+    $$ = BinOpExpression{ left: $1, operator: "+", right: $3 }
+  }
+  | add_expression '*' add_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: "*", right: $3 }
   }
 
 primary_expression
@@ -242,6 +263,10 @@ func (l *Lexer) Lex(lval *yySymType) int {
       return -1
     }
     token_number = int(tok.String()[0])
+  case token.LOR:
+    return LOGICAL_OR
+  case token.IF:
+    return IF
   case token.IDENT:
     if lit == "int" || lit == "void" {
       token_number = TYPE
