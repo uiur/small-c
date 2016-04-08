@@ -15,4 +15,10 @@ func TestParseFunctionDefinition(t *testing.T) {
       a = 1 + 2;
     }
   `)
+
+	Parse(`
+    int sum(int a, int b) {
+      a = 1 + 2;
+    }
+  `)
 }

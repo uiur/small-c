@@ -48,6 +48,11 @@ type AssignExpression struct {
   right Expression
 }
 
+type ParameterDeclaration struct {
+  typeName string
+  identifier string
+}
+
 %}
 
 %union {
@@ -61,6 +66,9 @@ type AssignExpression struct {
 
   statement Statement
   statements []Statement
+
+  parameters []ParameterDeclaration
+  parameter_declaration ParameterDeclaration
 }
 
 %type<expr> external_declaration declaration function_definition expression assign_expression primary_expression
@@ -69,6 +77,8 @@ type AssignExpression struct {
 %type<statement> statement
 %type<declarator> declarator
 %type<declarators> declarators
+%type<parameters> parameters
+%type<parameter_declaration> parameter_declaration
 %token<token> NUMBER IDENT TYPE
 
 %left '+'
@@ -123,6 +133,26 @@ function_definition
   : TYPE IDENT '(' ')' compound_statement
   {
     $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statements: $5 }
+  }
+  | TYPE IDENT '(' parameters ')' compound_statement
+  {
+    $$ = FunctionDefinition{ typeName: $1.lit, identifier: $2.lit, statements: $6 }
+  }
+
+parameters
+  : parameter_declaration
+  {
+    $$ = []ParameterDeclaration{ $1 }
+  }
+  | parameters ',' parameter_declaration
+  {
+    $$ = append($1, $3)
+  }
+
+parameter_declaration
+  : TYPE IDENT
+  {
+    $$ = ParameterDeclaration{ typeName: $1.lit, identifier: $2.lit }
   }
 
 compound_statement
