@@ -27,6 +27,7 @@ func Parse(src string) ([]Statement, error) {
 
 	l := new(Lexer)
 	l.Init(file, []byte(src), nil, scanner.ScanComments)
+	yyErrorVerbose = true
 
 	fail := yyParse(l)
 	if fail == 1 {

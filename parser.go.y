@@ -313,6 +313,7 @@ identifier
 type Lexer struct {
     scanner.Scanner
     result []Statement
+    token Token
     err error
 }
 
@@ -377,10 +378,11 @@ func (l *Lexer) Lex(lval *yySymType) int {
   }
 
   lval.token = Token{ tok: tok, lit: lit, pos: pos }
+  l.token = lval.token
 
   return token_number
 }
 
 func (l *Lexer) Error(e string) {
-  l.err = errors.New(e)
+  l.err = errors.New(fmt.Sprintf("%d: %s", l.token.pos, e))
 }
