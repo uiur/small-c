@@ -18,7 +18,7 @@ func TestParseFunctionDefinition(t *testing.T) {
 
 	Parse(`
     int sum(int a, int b) {
-      a = 1 + 2;
+      return a + b;
     }
   `)
 

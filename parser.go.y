@@ -50,6 +50,10 @@ type IfStatement struct {
   statement Statement
 }
 
+type ReturnStatement struct {
+  expression Expression
+}
+
 type AssignExpression struct {
   left Expression
   right Expression
@@ -86,7 +90,7 @@ type ParameterDeclaration struct {
 %type<declarators> declarators
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN
 
 %left '+'
 %left '*'
@@ -195,6 +199,14 @@ statement
   {
     $$ = IfStatement{ expression: $3, statement: $5 }
   }
+  | RETURN ';'
+  {
+    $$ = ReturnStatement{}
+  }
+  | RETURN expression ';'
+  {
+    $$ = ReturnStatement{ expression: $1 }
+  }
 
 expression
   : assign_expression
@@ -241,11 +253,21 @@ type Lexer struct {
     result Expression
 }
 
+var tokenMap = map[token.Token]int {
+  token.LOR: LOGICAL_OR,
+  token.IF: IF,
+  token.RETURN: RETURN,
+}
+
 func (l *Lexer) Lex(lval *yySymType) int {
   pos, tok, lit := l.Scan()
   token_number := int(tok)
 
   fmt.Println(tok, lit)
+
+  if tokenMap[tok] > 0 {
+    return tokenMap[tok]
+  }
 
   switch tok {
   case token.EOF:
@@ -263,10 +285,6 @@ func (l *Lexer) Lex(lval *yySymType) int {
       return -1
     }
     token_number = int(tok.String()[0])
-  case token.LOR:
-    return LOGICAL_OR
-  case token.IF:
-    return IF
   case token.IDENT:
     if lit == "int" || lit == "void" {
       token_number = TYPE
