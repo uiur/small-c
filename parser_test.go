@@ -21,24 +21,20 @@ func TestParseFunctionDefinition(t *testing.T) {
       return a + b;
     }
   `)
-
-	Parse(`
-    int foo(int a) {
-      if (a) a = 1;
-    }
-  `)
 }
 
 func TestParseIfStatement(t *testing.T) {
 	Parse(`
     int foo(int a) {
       if (a == 0) a = 1;
+      if (a != 0) a = 1;
     }
   `)
 
 	Parse(`
     int foo(int a, int b) {
       if (a && b) return 1;
+      if (a || b) return 1;
     }
   `)
 }

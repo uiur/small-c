@@ -91,7 +91,7 @@ type ParameterDeclaration struct {
 %type<declarators> declarators
 %type<parameters> parameters
 %type<parameter_declaration> parameter_declaration
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL
+%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ
 
 %left '+'
 %left '*'
@@ -237,7 +237,11 @@ equal_expression
   : add_expression
   | add_expression EQL add_expression
   {
-    $$ = BinOpExpression{ left: $1, operator: "==", right: $3}
+    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
+  }
+  | add_expression NEQ add_expression
+  {
+    $$ = BinOpExpression{ left: $1, operator: $2.lit, right: $3}
   }
 
 add_expression
@@ -274,6 +278,7 @@ var tokenMap = map[token.Token]int {
   token.IF: IF,
   token.RETURN: RETURN,
   token.EQL: EQL,
+  token.NEQ: NEQ,
 }
 
 func (l *Lexer) Lex(lval *yySymType) int {
