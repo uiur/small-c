@@ -2,6 +2,15 @@ package main
 
 import "testing"
 
+func TestCreateChild(t *testing.T) {
+	env := &Env{}
+
+	child := env.CreateChild()
+	if !(len(env.Children) > 0 && env.Children[0] == child && child.Level == env.Level+1) {
+		t.Errorf("the return value should be a child: parent: %v, child: %v", env, child)
+	}
+}
+
 func TestAdd(t *testing.T) {
 	env := &Env{}
 	err := env.Add(&Symbol{

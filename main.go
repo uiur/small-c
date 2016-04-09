@@ -69,7 +69,26 @@ func analyzeStatement(statement Statement, env *Env) {
 			Type: symbolType,
 		})
 
-		analyzeStatement(s.Statement, env)
+		if s.Statement != nil {
+			paramEnv := env.CreateChild()
+
+			for _, p := range s.Parameters {
+				parameter, ok := p.(ParameterDeclaration)
+
+				if ok {
+					name := parseIdentifierName(parameter.Identifier)
+					argType := composeType(parameter.Identifier, BasicType{Name: parameter.TypeName})
+
+					paramEnv.Add(&Symbol{
+						Name: name,
+						Kind: "param",
+						Type: argType,
+					})
+				}
+			}
+
+			analyzeStatement(s.Statement, paramEnv)
+		}
 
 	case Declaration:
 		for _, declarator := range s.Declarators {
