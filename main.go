@@ -41,10 +41,6 @@ func analyze(statements []Statement, env *Env) {
 func analyzeStatement(statement Statement, env *Env) {
 	switch s := statement.(type) {
 	case FunctionDefinition:
-		if env.Table == nil {
-			env.Table = map[string]*Symbol{}
-		}
-
 		name := parseIdentifierName(s.Identifier)
 
 		argTypes := []SymbolType{}
@@ -67,18 +63,14 @@ func analyzeStatement(statement Statement, env *Env) {
 			kind = "proto"
 		}
 
-		env.Table[name] = &Symbol{
+		env.Add(&Symbol{
 			Name: name,
 			Kind: kind,
 			Type: symbolType,
-		}
+		})
 
 	case Declaration:
 		for _, declarator := range s.Declarators {
-			if env.Table == nil {
-				env.Table = map[string]*Symbol{}
-			}
-
 			name := parseIdentifierName(declarator.Identifier)
 
 			symbolType := composeType(declarator.Identifier, BasicType{Name: s.VarType})
@@ -86,11 +78,11 @@ func analyzeStatement(statement Statement, env *Env) {
 				symbolType = ArrayType{Value: symbolType, Size: declarator.Size}
 			}
 
-			env.Table[name] = &Symbol{
+			env.Add(&Symbol{
 				Name: name,
 				Kind: "var",
 				Type: symbolType,
-			}
+			})
 		}
 	}
 }
