@@ -6,6 +6,7 @@ import (
     "go/scanner"
     "go/token"
     "fmt"
+    "strconv"
 )
 
 %}
@@ -88,7 +89,8 @@ declarator
   }
   | identifier_expression '[' NUMBER ']'
   {
-    $$ = Declarator{ Identifier: $1, Size: $3.lit }
+    i, _ := strconv.Atoi($3.lit)
+    $$ = Declarator{ Identifier: $1, Size: i }
   }
 
 function_prototype

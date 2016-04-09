@@ -47,7 +47,7 @@ func (e *BinOpExpression) Pos() token.Pos {
 
 type Declarator struct {
 	Identifier Expression
-	Size       string
+	Size       int
 }
 
 func (e *Declarator) Pos() token.Pos {

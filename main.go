@@ -26,7 +26,97 @@ func main() {
 	prelude, _ := Parse("void print(int i);\n")
 	statements = append(prelude, statements...)
 
-	pp.Print(statements)
+	env := &Env{}
+	analyze(statements, env)
+
+	pp.Println(statements, env)
+}
+
+func analyze(statements []Statement, env *Env) {
+	for _, statement := range statements {
+		analyzeStatement(statement, env)
+	}
+}
+
+func analyzeStatement(statement Statement, env *Env) {
+	switch s := statement.(type) {
+	case FunctionDefinition:
+		if env.Table == nil {
+			env.Table = map[string]*Symbol{}
+		}
+
+		name := parseIdentifierName(s.Identifier)
+
+		argTypes := []SymbolType{}
+
+		for _, p := range s.Parameters {
+			parameter, ok := p.(ParameterDeclaration)
+			if ok {
+				argType := BasicType{Name: parameter.TypeName}
+				argTypes = append(argTypes, composeType(parameter.Identifier, argType))
+			}
+		}
+
+		returnType := BasicType{Name: s.TypeName}
+		symbolType := FunctionType{Return: returnType, Args: argTypes}
+
+		kind := ""
+		if s.Statement != nil {
+			kind = "fun"
+		} else {
+			kind = "proto"
+		}
+
+		env.Table[name] = &Symbol{
+			Name: name,
+			Kind: kind,
+			Type: symbolType,
+		}
+
+	case Declaration:
+		for _, declarator := range s.Declarators {
+			if env.Table == nil {
+				env.Table = map[string]*Symbol{}
+			}
+
+			name := parseIdentifierName(declarator.Identifier)
+
+			symbolType := composeType(declarator.Identifier, BasicType{Name: s.VarType})
+			if declarator.Size > 0 {
+				symbolType = ArrayType{Value: symbolType, Size: declarator.Size}
+			}
+
+			env.Table[name] = &Symbol{
+				Name: name,
+				Kind: "var",
+				Type: symbolType,
+			}
+		}
+	}
+}
+
+func parseIdentifierName(expression Expression) string {
+	switch e := expression.(type) {
+	case IdentifierExpression:
+		return e.Name
+	case UnaryExpression:
+		return parseIdentifierName(e.Value)
+	}
+
+	return ""
+}
+
+func composeType(identifier Expression, symbolType SymbolType) SymbolType {
+	switch e := identifier.(type) {
+	case UnaryExpression:
+		if e.Operator == "*" {
+			return PointerType{Value: composeType(e.Value, symbolType)}
+		}
+	case IdentifierExpression:
+		return symbolType
+	}
+
+	return nil
 }
 
 func Parse(src string) ([]Statement, error) {
