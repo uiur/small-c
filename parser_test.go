@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParse(t *testing.T) {
 	statements, err := Parse(`
@@ -40,7 +43,7 @@ func TestParseError(t *testing.T) {
     wtf this is wtf
   `)
 
-	if err == nil {
+	if !(err != nil && strings.Contains(err.Error(), "syntax error")) {
 		t.Errorf("expect syntax error, but success")
 	}
 }

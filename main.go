@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/k0kubun/pp"
 )
@@ -38,10 +39,21 @@ func Parse(src string) ([]Statement, error) {
 
 	fail := yyParse(l)
 	if fail == 1 {
-		return nil, l.err
+		lineNumber, columnNumber := posToLineInfo(src, int(l.pos))
+		err := fmt.Errorf("%d:%d: %s", lineNumber, columnNumber, l.errMessage)
+
+		return nil, err
 	}
 
 	return l.result, nil
+}
+
+func posToLineInfo(src string, pos int) (int, int) {
+	lineNumber := strings.Count(src[:pos], "\n") + 1
+	lines := strings.Split(src, "\n")
+	columnNumber := len(lines[lineNumber-1])
+
+	return lineNumber, columnNumber
 }
 
 // Iterate over statement nodes and replace syntax sugar

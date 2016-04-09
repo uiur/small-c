@@ -6,7 +6,6 @@ import (
     "go/scanner"
     "go/token"
     "fmt"
-    "errors"
 )
 
 %}
@@ -314,7 +313,8 @@ type Lexer struct {
     scanner.Scanner
     result []Statement
     token Token
-    err error
+    pos token.Pos
+    errMessage string
 }
 
 var tokenMap = map[token.Token]int {
@@ -384,5 +384,6 @@ func (l *Lexer) Lex(lval *yySymType) int {
 }
 
 func (l *Lexer) Error(e string) {
-  l.err = errors.New(fmt.Sprintf("%d: %s", l.token.pos, e))
+  l.pos = l.token.pos
+  l.errMessage = e
 }
