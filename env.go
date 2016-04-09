@@ -3,8 +3,15 @@ package main
 import "fmt"
 
 type Env struct {
-	Table  map[string]*Symbol
-	Parent *Env
+	Table    map[string]*Symbol
+	Children []*Env
+	Parent   *Env
+}
+
+func (env *Env) CreateChild() *Env {
+	newEnv := &Env{Parent: env}
+	env.Children = append(env.Children, newEnv)
+	return newEnv
 }
 
 func (env *Env) Add(symbol *Symbol) error {

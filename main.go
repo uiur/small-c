@@ -69,6 +69,8 @@ func analyzeStatement(statement Statement, env *Env) {
 			Type: symbolType,
 		})
 
+		analyzeStatement(s.Statement, env)
+
 	case Declaration:
 		for _, declarator := range s.Declarators {
 			name := parseIdentifierName(declarator.Identifier)
@@ -83,6 +85,12 @@ func analyzeStatement(statement Statement, env *Env) {
 				Kind: "var",
 				Type: symbolType,
 			})
+		}
+
+	case CompoundStatement:
+		newEnv := env.CreateChild()
+		for _, declaration := range s.Declarations {
+			analyzeStatement(declaration, newEnv)
 		}
 	}
 }
