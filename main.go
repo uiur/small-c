@@ -111,6 +111,18 @@ func analyzeStatement(statement Statement, env *Env) {
 		for _, declaration := range s.Declarations {
 			analyzeStatement(declaration, newEnv)
 		}
+
+		for _, statement := range s.Statements {
+			analyzeStatement(statement, newEnv)
+		}
+
+	case IfStatement:
+		analyzeStatement(s.TrueStatement, env)
+		analyzeStatement(s.FalseStatement, env)
+
+	case WhileStatement:
+		analyzeStatement(s.Statement, env)
+
 	}
 }
 
