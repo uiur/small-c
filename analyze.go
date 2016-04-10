@@ -94,7 +94,8 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) error {
 	return nil
 }
 
-func analyzeDeclaration(s Declaration, env *Env) {
+func analyzeDeclaration(s Declaration, env *Env) []error {
+	errs := []error{}
 	for _, declarator := range s.Declarators {
 		name := parseIdentifierName(declarator.Identifier)
 
@@ -103,12 +104,18 @@ func analyzeDeclaration(s Declaration, env *Env) {
 			symbolType = ArrayType{Value: symbolType, Size: declarator.Size}
 		}
 
-		env.Add(&Symbol{
+		err := env.Add(&Symbol{
 			Name: name,
 			Kind: "var",
 			Type: symbolType,
 		})
+
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
+
+	return errs
 }
 
 func parseIdentifierName(expression Expression) string {
