@@ -109,3 +109,20 @@ func TestAnalyzeFunctionDefinition(t *testing.T) {
 		}
 	}
 }
+
+func TestAnalyzeCompoundStatement(t *testing.T) {
+	statements, _ := Parse(`
+		int main() {
+			int a;
+			int a;
+		}
+	`)
+
+	def := statements[0].(FunctionDefinition)
+	compoundStatement := def.Statement.(CompoundStatement)
+	errs := analyzeCompoundStatement(compoundStatement, &Env{})
+
+	if len(errs) != 1 {
+		t.Errorf("should have 1 error: %v", errs)
+	}
+}
