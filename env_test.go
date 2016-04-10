@@ -2,6 +2,29 @@ package main
 
 import "testing"
 
+func TestType(t *testing.T) {
+	data := [][]string{
+		{PointerType{Value: BasicType{Name: "int"}}.String(), "int*"},
+		{
+			ArrayType{Value: BasicType{Name: "int"}, Size: 4}.String(),
+			"int[4]",
+		},
+		{
+			FunctionType{
+				Return: BasicType{Name: "int"},
+				Args:   []SymbolType{BasicType{Name: "int"}, BasicType{Name: "int"}},
+			}.String(),
+			"(int, int) -> int",
+		},
+	}
+
+	for _, pair := range data {
+		if pair[0] != pair[1] {
+			t.Errorf("expect `%v`, got `%v`", pair[1], pair[0])
+		}
+	}
+}
+
 func TestCreateChild(t *testing.T) {
 	env := &Env{}
 

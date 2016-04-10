@@ -57,3 +57,38 @@ func TestAnalyzeDeclaration(t *testing.T) {
 		}
 	}
 }
+
+func TestAnalyzeFunctionDefinition(t *testing.T) {
+	statements, _ := Parse(`
+    int foo(int a, int b) {
+      return a + b;
+    }
+  `)
+
+	fn := statements[0].(FunctionDefinition)
+	env := &Env{}
+	analyzeFunctionDefinition(fn, env)
+
+	symbol := env.Table["foo"]
+	if symbol == nil {
+		t.Errorf("env should have `foo` as symbol: %v", env)
+		return
+	}
+
+	symbolType, ok := symbol.Type.(FunctionType)
+	if !ok {
+		t.Errorf("symbol type should be FunctionType: %v", symbol)
+		return
+	}
+
+	returnIsInt := symbolType.Return.(BasicType).Name == "int"
+	if !returnIsInt {
+		t.Errorf("expect return type to be int, but got %v", symbolType)
+	}
+
+	argsHaveTwoInt := len(symbolType.Args) == 2 && symbolType.Args[0].String() == "int"
+
+	if !argsHaveTwoInt {
+		t.Errorf("expect args to be (int, int): %v", symbolType.Args)
+	}
+}
