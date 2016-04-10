@@ -4,11 +4,12 @@ import "fmt"
 
 // Analyze ast and register variables to env
 func Analyze(statements []Statement, env *Env) []error {
+	var errs []error
 	for _, statement := range statements {
-		analyzeStatement(statement, env)
+		errs = append(errs, analyzeStatement(statement, env)...)
 	}
 
-	return nil
+	return errs
 }
 
 func analyzeStatement(statement Statement, env *Env) []error {

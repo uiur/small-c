@@ -27,7 +27,14 @@ func main() {
 	statements = append(prelude, statements...)
 
 	env := &Env{}
-	Analyze(statements, env)
+	errs := Analyze(statements, env)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			fmt.Println(err)
+		}
+
+		os.Exit(1)
+	}
 
 	pp.Println(statements, env)
 }
