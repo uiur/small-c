@@ -34,10 +34,12 @@ func main() {
 			switch e := err.(type) {
 			case SemanticError:
 				lineNumber, columnNumber := posToLineInfo(src, int(e.Pos))
-				fmt.Println(fmt.Errorf("%d:%d: %v", lineNumber, columnNumber, e.Err))
+				err = fmt.Errorf("%d:%d: %v", lineNumber, columnNumber, e.Err)
+
 			default:
-				fmt.Println(e)
 			}
+
+			fmt.Fprintln(os.Stderr, err)
 		}
 
 		os.Exit(1)
