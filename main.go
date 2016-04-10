@@ -13,7 +13,8 @@ import (
 
 func main() {
 	data, _ := ioutil.ReadAll(os.Stdin)
-	statements, err := Parse(string(data))
+	src := string(data)
+	statements, err := Parse(src)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -30,7 +31,13 @@ func main() {
 	errs := Analyze(statements, env)
 	if len(errs) > 0 {
 		for _, err := range errs {
-			fmt.Println(err)
+			switch e := err.(type) {
+			case SemanticError:
+				lineNumber, columnNumber := posToLineInfo(src, int(e.Pos))
+				fmt.Println(fmt.Errorf("%d:%d: %v", lineNumber, columnNumber, e.Err))
+			default:
+				fmt.Println(e)
+			}
 		}
 
 		os.Exit(1)

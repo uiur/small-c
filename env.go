@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go/token"
 	"strings"
 )
 
@@ -84,4 +85,14 @@ func (t FunctionType) String() string {
 	}
 
 	return "(" + strings.Join(args, ", ") + ")" + " -> " + t.Return.String()
+}
+
+type SemanticError struct {
+	error
+	Pos token.Pos
+	Err error
+}
+
+func (e SemanticError) Error() string {
+	return e.Err.Error()
 }

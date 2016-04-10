@@ -88,7 +88,10 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
 				})
 
 				if err != nil {
-					errs = append(errs, fmt.Errorf("parameter `%s` is already defined", name))
+					errs = append(errs, SemanticError{
+						Pos: parameter.Pos(),
+						Err: fmt.Errorf("parameter `%s` is already defined", name),
+					})
 				}
 			}
 		}
