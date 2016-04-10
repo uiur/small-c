@@ -93,7 +93,7 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
 			}
 		}
 
-		analyzeStatement(s.Statement, paramEnv)
+		errs = append(errs, analyzeStatement(s.Statement, paramEnv)...)
 	}
 
 	return errs
