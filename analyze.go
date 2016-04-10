@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // Analyze ast and register variables to env
 func Analyze(statements []Statement, env *Env) []error {
 	for _, statement := range statements {
@@ -41,9 +43,10 @@ func analyzeStatement(statement Statement, env *Env) []error {
 	return errs
 }
 
-func analyzeFunctionDefinition(s FunctionDefinition, env *Env) error {
-	name := parseIdentifierName(s.Identifier)
+func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
+	errs := []error{}
 
+	name := parseIdentifierName(s.Identifier)
 	argTypes := []SymbolType{}
 
 	for _, p := range s.Parameters {
@@ -64,11 +67,15 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) error {
 		kind = "proto"
 	}
 
-	env.Add(&Symbol{
+	err := env.Add(&Symbol{
 		Name: name,
 		Kind: kind,
 		Type: symbolType,
 	})
+
+	if err != nil {
+		errs = append(errs, err)
+	}
 
 	if s.Statement != nil {
 		paramEnv := env.CreateChild()
@@ -80,18 +87,22 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) error {
 				name := parseIdentifierName(parameter.Identifier)
 				argType := composeType(parameter.Identifier, BasicType{Name: parameter.TypeName})
 
-				paramEnv.Add(&Symbol{
+				err := paramEnv.Add(&Symbol{
 					Name: name,
-					Kind: "param",
+					Kind: "parm",
 					Type: argType,
 				})
+
+				if err != nil {
+					errs = append(errs, fmt.Errorf("parameter `%s` is already defined", name))
+				}
 			}
 		}
 
 		analyzeStatement(s.Statement, paramEnv)
 	}
 
-	return nil
+	return errs
 }
 
 func analyzeDeclaration(s Declaration, env *Env) []error {
