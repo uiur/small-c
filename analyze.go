@@ -68,7 +68,10 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
 	})
 
 	if err != nil {
-		errs = append(errs, err)
+		errs = append(errs, SemanticError{
+			Pos: s.Pos(),
+			Err: err,
+		})
 	}
 
 	if s.Statement != nil {
@@ -119,7 +122,10 @@ func analyzeDeclaration(s Declaration, env *Env) []error {
 		})
 
 		if err != nil {
-			errs = append(errs, err)
+			errs = append(errs, SemanticError{
+				Pos: declarator.Pos(),
+				Err: err,
+			})
 		}
 	}
 

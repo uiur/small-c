@@ -6,6 +6,7 @@ type Expression interface{}
 type Node interface {
 	Pos() token.Pos
 }
+
 type Token struct {
 	tok token.Token
 	lit string
@@ -51,8 +52,11 @@ type Declarator struct {
 }
 
 func (e *Declarator) Pos() token.Pos {
-	identifier, ok := e.Identifier.(Node)
-	if ok {
+	switch identifier := e.Identifier.(type) {
+	case IdentifierExpression:
+		return identifier.Pos()
+
+	case UnaryExpression:
 		return identifier.Pos()
 	}
 

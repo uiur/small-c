@@ -68,9 +68,15 @@ func Parse(src string) ([]Statement, error) {
 }
 
 func posToLineInfo(src string, pos int) (int, int) {
+	if pos < 0 {
+		panic("pos must be positive")
+	}
+
 	lineNumber := strings.Count(src[:pos], "\n") + 1
-	lines := strings.Split(src, "\n")
-	columnNumber := len(lines[lineNumber-1])
+
+	lines := strings.Split(src[:pos], "\n")
+	lastLine := lines[len(lines)-1]
+	columnNumber := len(lastLine)
 
 	return lineNumber, columnNumber
 }
