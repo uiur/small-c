@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -172,5 +173,54 @@ func TestParseUnaryExpression(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestWalkExpression(t *testing.T) {
+	{
+		e := WalkExpression(UnaryExpression{
+			Operator: "-",
+			Value:    NumberExpression{Value: "42"},
+		})
+
+		actual := reflect.TypeOf(e).Name()
+		expected := "BinOpExpression"
+		if actual != expected {
+			t.Errorf("expect %v, got %v", expected, actual)
+		}
+	}
+
+	{
+		e := WalkExpression(UnaryExpression{
+			Operator: "&",
+			Value: UnaryExpression{
+				Operator: "*",
+				Value: IdentifierExpression{
+					Name: "foo",
+				},
+			},
+		})
+
+		actual := reflect.TypeOf(e).Name()
+		expected := "IdentifierExpression"
+		if actual != expected {
+			t.Errorf("expect %v, got %v", expected, e)
+		}
+	}
+
+	{
+		// a[10] -> *(a + 10)
+		e := WalkExpression(ArrayReferenceExpression{
+			Target: IdentifierExpression{Name: "a"},
+			Index:  NumberExpression{Value: "10"},
+		})
+
+		unaryExpression, ok := e.(UnaryExpression)
+
+		if !(ok &&
+			unaryExpression.Operator == "*" &&
+			reflect.TypeOf(unaryExpression.Value).Name() == "BinOpExpression") {
+			t.Errorf("it should be *(a + 10), but: %v", e)
+		}
 	}
 }
