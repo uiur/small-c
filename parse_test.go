@@ -1,7 +1,6 @@
 package main
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -178,48 +177,45 @@ func TestParseUnaryExpression(t *testing.T) {
 
 func TestWalkExpression(t *testing.T) {
 	{
-		e := WalkExpression(UnaryExpression{
+		e := WalkExpression(&UnaryExpression{
 			Operator: "-",
-			Value:    NumberExpression{Value: "42"},
+			Value:    &NumberExpression{Value: "42"},
 		})
 
-		actual := reflect.TypeOf(e).Name()
-		expected := "BinOpExpression"
-		if actual != expected {
-			t.Errorf("expect %v, got %v", expected, actual)
+		_, ok := e.(*BinOpExpression)
+		if !ok {
+			t.Errorf("expect *BinOpExpression")
 		}
 	}
 
 	{
-		e := WalkExpression(UnaryExpression{
+		e := WalkExpression(&UnaryExpression{
 			Operator: "&",
-			Value: UnaryExpression{
+			Value: &UnaryExpression{
 				Operator: "*",
-				Value: IdentifierExpression{
+				Value: &IdentifierExpression{
 					Name: "foo",
 				},
 			},
 		})
 
-		actual := reflect.TypeOf(e).Name()
-		expected := "IdentifierExpression"
-		if actual != expected {
-			t.Errorf("expect %v, got %v", expected, e)
+		_, ok := e.(*IdentifierExpression)
+		if !ok {
+			t.Errorf("expect *IdentifierExpression")
 		}
 	}
 
 	{
 		// a[10] -> *(a + 10)
-		e := WalkExpression(ArrayReferenceExpression{
-			Target: IdentifierExpression{Name: "a"},
-			Index:  NumberExpression{Value: "10"},
+		e := WalkExpression(&ArrayReferenceExpression{
+			Target: &IdentifierExpression{Name: "a"},
+			Index:  &NumberExpression{Value: "10"},
 		})
 
-		unaryExpression, ok := e.(UnaryExpression)
+		unaryExpression, ok := e.(*UnaryExpression)
+		_, isBinOp := (unaryExpression.Value).(*BinOpExpression)
 
-		if !(ok &&
-			unaryExpression.Operator == "*" &&
-			reflect.TypeOf(unaryExpression.Value).Name() == "BinOpExpression") {
+		if !(ok && unaryExpression.Operator == "*" && isBinOp) {
 			t.Errorf("it should be *(a + 10), but: %v", e)
 		}
 	}

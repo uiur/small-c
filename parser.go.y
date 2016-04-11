@@ -23,7 +23,7 @@ import (
   statement Statement
   statements []Statement
 
-  parameter_declaration ParameterDeclaration
+  parameter_declaration *ParameterDeclaration
 }
 
 %type<expression> expression optional_expression identifier_expression identifier
@@ -108,7 +108,7 @@ identifier_expression
   : identifier
   | '*' identifier_expression
   {
-    $$ = UnaryExpression{ pos: $1.pos, Operator: "*", Value: $2 }
+    $$ = &UnaryExpression{ pos: $1.pos, Operator: "*", Value: $2 }
   }
 
 optional_parameters
@@ -128,7 +128,7 @@ parameters
 parameter_declaration
   : TYPE identifier_expression
   {
-    $$ = ParameterDeclaration{ pos: $1.pos, TypeName: $1.lit, Identifier: $2 }
+    $$ = &ParameterDeclaration{ pos: $1.pos, TypeName: $1.lit, Identifier: $2 }
   }
 
 compound_statement
@@ -162,7 +162,7 @@ statement
   }
   | expression ';'
   {
-    $$ = ExpressionStatement{ Value: $1 }
+    $$ = &ExpressionStatement{ Value: $1 }
   }
   | compound_statement
   | IF '(' expression ')' statement
@@ -197,10 +197,10 @@ expression
   | expression ',' assign_expression
   {
     switch e := $1.(type) {
-    case ExpressionList:
-      $$ = ExpressionList{ Values: append(e.Values, $3) }
+    case *ExpressionList:
+      $$ = &ExpressionList{ Values: append(e.Values, $3) }
     default:
-      $$ = ExpressionList{ Values: []Expression{$1, $3} }
+      $$ = &ExpressionList{ Values: []Expression{$1, $3} }
     }
   }
 
@@ -208,105 +208,105 @@ assign_expression
   : logical_or_expression
   | logical_or_expression '=' logical_or_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: "=", Right: $3 }
+    $$ = &BinOpExpression{ Left: $1, Operator: "=", Right: $3 }
   }
 
 logical_or_expression
   : logical_and_expression
   | logical_and_expression LOGICAL_OR logical_and_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 logical_and_expression
   : equal_expression
   | equal_expression LOGICAL_AND equal_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 equal_expression
   : relation_expression
   | relation_expression EQL relation_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
   | relation_expression NEQ relation_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 relation_expression
   : add_expression
   | add_expression '>' add_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: ">", Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: ">", Right: $3}
   }
   | add_expression '<' add_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: "<", Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: "<", Right: $3}
   }
   | add_expression GEQ add_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
   | add_expression LEQ add_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 add_expression
   : mult_expression
   | add_expression '+' mult_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: "+", Right: $3 }
+    $$ = &BinOpExpression{ Left: $1, Operator: "+", Right: $3 }
   }
   | add_expression '-' mult_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: "-", Right: $3 }
+    $$ = &BinOpExpression{ Left: $1, Operator: "-", Right: $3 }
   }
 
 mult_expression
   : unary_expression
   | mult_expression '*' primary_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: "*", Right: $3 }
+    $$ = &BinOpExpression{ Left: $1, Operator: "*", Right: $3 }
   }
   | mult_expression '/' primary_expression
   {
-    $$ = BinOpExpression{ Left: $1, Operator: "/", Right: $3 }
+    $$ = &BinOpExpression{ Left: $1, Operator: "/", Right: $3 }
   }
 
 unary_expression
   : postfix_expression
   | '-' unary_expression
   {
-    $$ = UnaryExpression{ pos: $1.pos, Operator: "-", Value: $2 }
+    $$ = &UnaryExpression{ pos: $1.pos, Operator: "-", Value: $2 }
   }
   | '&' unary_expression
   {
-    $$ = UnaryExpression{ pos: $1.pos, Operator: "&", Value: $2 }
+    $$ = &UnaryExpression{ pos: $1.pos, Operator: "&", Value: $2 }
   }
   | '*' unary_expression
   {
-    $$ = UnaryExpression{ pos: $1.pos, Operator: "*", Value: $2 }
+    $$ = &UnaryExpression{ pos: $1.pos, Operator: "*", Value: $2 }
   }
 
 postfix_expression
   : primary_expression
   | postfix_expression '[' expression ']'
   {
-    $$ = ArrayReferenceExpression{ Target: $1, Index: $3 }
+    $$ = &ArrayReferenceExpression{ Target: $1, Index: $3 }
   }
   | identifier '(' optional_expression ')'
   {
-    $$ = FunctionCallExpression{ Identifier: $1, Argument: $3  }
+    $$ = &FunctionCallExpression{ Identifier: $1, Argument: $3  }
   }
 
 primary_expression
   : NUMBER
   {
-    $$ = NumberExpression{ pos: $1.pos, Value: $1.lit }
+    $$ = &NumberExpression{ pos: $1.pos, Value: $1.lit }
   }
   | identifier
   | '(' expression ')'
@@ -317,7 +317,7 @@ primary_expression
 identifier
   : IDENT
   {
-    $$ = IdentifierExpression{ pos: $1.pos, Name: $1.lit }
+    $$ = &IdentifierExpression{ pos: $1.pos, Name: $1.lit }
   }
 
 %%

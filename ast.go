@@ -12,15 +12,17 @@ type Node interface {
 	Pos() token.Pos
 }
 
-type Expression interface{}
+type Expression interface {
+	Node
+}
 
 type ExpressionList struct {
 	Values []Expression
 }
 
 func (e *ExpressionList) Pos() token.Pos {
-	node := e.Values[0].(Node)
-	return node.Pos()
+	first := e.Values[0]
+	return first.Pos()
 }
 
 type NumberExpression struct {
@@ -31,8 +33,9 @@ type NumberExpression struct {
 func (e *NumberExpression) Pos() token.Pos { return e.pos }
 
 type IdentifierExpression struct {
-	pos  token.Pos
-	Name string
+	pos    token.Pos
+	Name   string
+	Symbol *Symbol
 }
 
 func (e *IdentifierExpression) Pos() token.Pos { return e.pos }
@@ -52,8 +55,7 @@ type BinOpExpression struct {
 }
 
 func (e *BinOpExpression) Pos() token.Pos {
-	left := e.Left.(Node)
-	return left.Pos()
+	return e.Left.Pos()
 }
 
 type FunctionCallExpression struct {
@@ -62,7 +64,7 @@ type FunctionCallExpression struct {
 }
 
 func (e *FunctionCallExpression) Pos() token.Pos {
-	identifier := e.Identifier.(IdentifierExpression)
+	identifier := e.Identifier.(*IdentifierExpression)
 	return identifier.Pos()
 }
 
@@ -72,8 +74,7 @@ type ArrayReferenceExpression struct {
 }
 
 func (e *ArrayReferenceExpression) Pos() token.Pos {
-	target := e.Target.(Node)
-	return target.Pos()
+	return e.Target.Pos()
 }
 
 type PointerExpression struct {
@@ -90,10 +91,10 @@ type Declarator struct {
 
 func (e *Declarator) Pos() token.Pos {
 	switch identifier := e.Identifier.(type) {
-	case IdentifierExpression:
+	case *IdentifierExpression:
 		return identifier.Pos()
 
-	case UnaryExpression:
+	case *UnaryExpression:
 		return identifier.Pos()
 	}
 
@@ -132,12 +133,7 @@ type ExpressionStatement struct {
 }
 
 func (e *ExpressionStatement) Pos() token.Pos {
-	value, ok := e.Value.(Node)
-	if ok {
-		return value.Pos()
-	}
-
-	return -1
+	return e.Value.Pos()
 }
 
 type IfStatement struct {

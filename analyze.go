@@ -40,11 +40,11 @@ func analyzeStatement(statement Statement, env *Env) []error {
 func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
 	errs := []error{}
 
-	name := parseIdentifierName(s.Identifier)
+	identifier := findIdentifierExpression(s.Identifier)
 	argTypes := []SymbolType{}
 
 	for _, p := range s.Parameters {
-		parameter, ok := p.(ParameterDeclaration)
+		parameter, ok := p.(*ParameterDeclaration)
 		if ok {
 			argType := BasicType{Name: parameter.TypeName}
 			argTypes = append(argTypes, composeType(parameter.Identifier, argType))
@@ -62,7 +62,7 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
 	}
 
 	err := env.Add(&Symbol{
-		Name: name,
+		Name: identifier.Name,
 		Kind: kind,
 		Type: symbolType,
 	})
@@ -72,13 +72,15 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
 			Pos: s.Pos(),
 			Err: err,
 		})
+	} else {
+		identifier.Symbol = env.Table[identifier.Name]
 	}
 
 	if s.Statement != nil {
 		paramEnv := env.CreateChild()
 
 		for _, p := range s.Parameters {
-			parameter, ok := p.(ParameterDeclaration)
+			parameter, ok := p.(*ParameterDeclaration)
 
 			if ok {
 				name := parseIdentifierName(parameter.Identifier)
@@ -148,22 +150,33 @@ func analyzeCompoundStatement(s CompoundStatement, env *Env) []error {
 
 func parseIdentifierName(expression Expression) string {
 	switch e := expression.(type) {
-	case IdentifierExpression:
+	case *IdentifierExpression:
 		return e.Name
-	case UnaryExpression:
+	case *UnaryExpression:
 		return parseIdentifierName(e.Value)
 	}
 
 	return ""
 }
 
+func findIdentifierExpression(expression Expression) *IdentifierExpression {
+	switch e := expression.(type) {
+	case *IdentifierExpression:
+		return e
+	case *UnaryExpression:
+		return findIdentifierExpression(e.Value)
+	}
+
+	panic("IdentifierExpression not found")
+}
+
 func composeType(identifier Expression, symbolType SymbolType) SymbolType {
 	switch e := identifier.(type) {
-	case UnaryExpression:
+	case *UnaryExpression:
 		if e.Operator == "*" {
 			return PointerType{Value: composeType(e.Value, symbolType)}
 		}
-	case IdentifierExpression:
+	case *IdentifierExpression:
 		return symbolType
 	}
 

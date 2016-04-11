@@ -104,32 +104,32 @@ func Walk(statement Statement) Statement {
 
 func WalkExpression(expression Expression) Expression {
 	switch e := expression.(type) {
-	case ExpressionList:
+	case *ExpressionList:
 		for i, value := range e.Values {
 			e.Values[i] = WalkExpression(value)
 		}
 
 		return e
 
-	case BinOpExpression:
+	case *BinOpExpression:
 		e.Left = WalkExpression(e.Left)
 		e.Right = WalkExpression(e.Right)
 
 		return e
 
-	case UnaryExpression:
+	case *UnaryExpression:
 		e.Value = WalkExpression(e.Value)
 
 		if e.Operator == "-" {
-			return BinOpExpression{
-				Left:     NumberExpression{pos: e.Pos(), Value: "0"},
+			return &BinOpExpression{
+				Left:     &NumberExpression{pos: e.Pos(), Value: "0"},
 				Operator: "-",
 				Right:    e.Value,
 			}
 		} else if e.Operator == "&" {
 			// &(*e) -> e
 			switch value := e.Value.(type) {
-			case UnaryExpression:
+			case *UnaryExpression:
 				if value.Operator == "*" {
 					return value.Value
 				}
@@ -138,14 +138,14 @@ func WalkExpression(expression Expression) Expression {
 
 		return e
 
-	case ArrayReferenceExpression:
+	case *ArrayReferenceExpression:
 		// a[100]  =>  *(a + 100)
 		e.Target = WalkExpression(e.Target)
 		e.Index = WalkExpression(e.Index)
 
-		return UnaryExpression{
+		return &UnaryExpression{
 			Operator: "*",
-			Value: BinOpExpression{
+			Value: &BinOpExpression{
 				Left:     e.Target,
 				Operator: "+",
 				Right:    e.Index,
