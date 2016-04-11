@@ -26,9 +26,8 @@ import (
   parameter_declaration ParameterDeclaration
 }
 
-%type<expression> identifier_expression identifier
-%type<expression> expression
-%type<expression> add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression optional_expression postfix_expression
+%type<expression> expression optional_expression identifier_expression identifier
+%type<expression> add_expression mult_expression assign_expression primary_expression logical_or_expression logical_and_expression equal_expression relation_expression unary_expression postfix_expression
 %type<expressions> parameters optional_parameters
 %type<statements> statements declarations optional_statements optional_declarations program
 %type<statement> statement compound_statement external_declaration declaration function_definition function_prototype
@@ -192,6 +191,18 @@ optional_expression: { $$ = nil }
 
 expression
   : assign_expression
+  {
+    $$ = $1
+  }
+  | expression ',' assign_expression
+  {
+    switch e := $1.(type) {
+    case ExpressionList:
+      $$ = ExpressionList{ Values: append(e.Values, $3) }
+    default:
+      $$ = ExpressionList{ Values: []Expression{$1, $3} }
+    }
+  }
 
 assign_expression
   : logical_or_expression

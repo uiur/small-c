@@ -2,15 +2,25 @@ package main
 
 import "go/token"
 
-type Expression interface{}
-type Node interface {
-	Pos() token.Pos
-}
-
 type Token struct {
 	tok token.Token
 	lit string
 	pos token.Pos
+}
+
+type Node interface {
+	Pos() token.Pos
+}
+
+type Expression interface{}
+
+type ExpressionList struct {
+	Values []Expression
+}
+
+func (e *ExpressionList) Pos() token.Pos {
+	node := e.Values[0].(Node)
+	return node.Pos()
 }
 
 type NumberExpression struct {
@@ -45,6 +55,33 @@ func (e *BinOpExpression) Pos() token.Pos {
 	left := e.Left.(Node)
 	return left.Pos()
 }
+
+type FunctionCallExpression struct {
+	Identifier Expression
+	Argument   Expression
+}
+
+func (e *FunctionCallExpression) Pos() token.Pos {
+	identifier := e.Identifier.(IdentifierExpression)
+	return identifier.Pos()
+}
+
+type ArrayReferenceExpression struct {
+	Target Expression
+	Index  Expression
+}
+
+func (e *ArrayReferenceExpression) Pos() token.Pos {
+	target := e.Target.(Node)
+	return target.Pos()
+}
+
+type PointerExpression struct {
+	pos   token.Pos
+	Value Expression
+}
+
+func (e *PointerExpression) Pos() token.Pos { return e.pos }
 
 type Declarator struct {
 	Identifier Expression
@@ -137,26 +174,6 @@ type ReturnStatement struct {
 
 func (e *ReturnStatement) Pos() token.Pos { return e.pos }
 
-type FunctionCallExpression struct {
-	Identifier Expression
-	Argument   Expression
-}
-
-func (e *FunctionCallExpression) Pos() token.Pos {
-	identifier := e.Identifier.(IdentifierExpression)
-	return identifier.Pos()
-}
-
-type ArrayReferenceExpression struct {
-	Target Expression
-	Index  Expression
-}
-
-func (e *ArrayReferenceExpression) Pos() token.Pos {
-	target := e.Target.(Node)
-	return target.Pos()
-}
-
 type ParameterDeclaration struct {
 	pos        token.Pos
 	TypeName   string
@@ -164,10 +181,3 @@ type ParameterDeclaration struct {
 }
 
 func (e *ParameterDeclaration) Pos() token.Pos { return e.pos }
-
-type PointerExpression struct {
-	pos   token.Pos
-	Value Expression
-}
-
-func (e *PointerExpression) Pos() token.Pos { return e.pos }

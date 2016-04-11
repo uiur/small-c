@@ -144,6 +144,13 @@ func Walk(statement Statement) Statement {
 
 func WalkExpression(expression Expression) Expression {
 	switch e := expression.(type) {
+	case ExpressionList:
+		for i, value := range e.Values {
+			e.Values[i] = WalkExpression(value)
+		}
+
+		return e
+
 	case BinOpExpression:
 		e.Left = WalkExpression(e.Left)
 		e.Right = WalkExpression(e.Right)
