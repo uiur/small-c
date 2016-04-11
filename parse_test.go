@@ -149,16 +149,16 @@ func TestParseForStatement(t *testing.T) {
 	}
 
 	switch mainStatements(statements)[0].(type) {
-	case ForStatement:
+	case *ForStatement:
 	default:
 		t.Error("expected ForStatement")
 	}
 }
 
 func mainStatements(statements []Statement) []Statement {
-	main := statements[0].(FunctionDefinition)
+	main := statements[0].(*FunctionDefinition)
 
-	return main.Statement.(CompoundStatement).Statements
+	return main.Statement.(*CompoundStatement).Statements
 }
 
 func TestParseUnaryExpression(t *testing.T) {

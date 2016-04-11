@@ -14,7 +14,7 @@ func TestAnalyzeDeclaration(t *testing.T) {
 			return
 		}
 
-		declaration := statements[0].(Declaration)
+		declaration := statements[0].(*Declaration)
 
 		env := &Env{}
 		analyzeDeclaration(declaration, env)
@@ -31,7 +31,7 @@ func TestAnalyzeDeclaration(t *testing.T) {
 
 	{
 		statements, _ := Parse("int a[10], b;\n")
-		declaration := statements[0].(Declaration)
+		declaration := statements[0].(*Declaration)
 
 		env := &Env{}
 		analyzeDeclaration(declaration, env)
@@ -47,7 +47,7 @@ func TestAnalyzeDeclaration(t *testing.T) {
 
 	{
 		statements, _ := Parse("int a, b, a;\n")
-		declaration := statements[0].(Declaration)
+		declaration := statements[0].(*Declaration)
 
 		errs := analyzeDeclaration(declaration, &Env{})
 
@@ -66,7 +66,7 @@ func TestAnalyzeFunctionDefinition(t *testing.T) {
 	    }
 	  `)
 
-		fn := statements[0].(FunctionDefinition)
+		fn := statements[0].(*FunctionDefinition)
 		env := &Env{}
 		analyzeFunctionDefinition(fn, env)
 
@@ -101,7 +101,7 @@ func TestAnalyzeFunctionDefinition(t *testing.T) {
 	    }
 	  `)
 
-		fn := statements[0].(FunctionDefinition)
+		fn := statements[0].(*FunctionDefinition)
 		errs := analyzeFunctionDefinition(fn, &Env{})
 
 		if len(errs) != 1 {
@@ -118,8 +118,8 @@ func TestAnalyzeCompoundStatement(t *testing.T) {
 		}
 	`)
 
-	def := statements[0].(FunctionDefinition)
-	compoundStatement := def.Statement.(CompoundStatement)
+	def := statements[0].(*FunctionDefinition)
+	compoundStatement := def.Statement.(*CompoundStatement)
 	errs := analyzeCompoundStatement(compoundStatement, &Env{})
 
 	if len(errs) != 1 {

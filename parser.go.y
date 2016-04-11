@@ -17,8 +17,8 @@ import (
   expression Expression
   expressions []Expression
 
-  declarator Declarator
-  declarators []Declarator
+  declarator *Declarator
+  declarators []*Declarator
 
   statement Statement
   statements []Statement
@@ -68,13 +68,13 @@ declarations
 declaration
   : TYPE declarators ';'
   {
-    $$ = Declaration{ pos: $1.pos, VarType: $1.lit, Declarators: $2 }
+    $$ = &Declaration{ pos: $1.pos, VarType: $1.lit, Declarators: $2 }
   }
 
 declarators
   : declarator
   {
-    $$ = []Declarator{ $1 }
+    $$ = []*Declarator{ $1 }
   }
   | declarators ',' declarator
   {
@@ -84,24 +84,24 @@ declarators
 declarator
   : identifier_expression
   {
-    $$ = Declarator{ Identifier: $1 }
+    $$ = &Declarator{ Identifier: $1 }
   }
   | identifier_expression '[' NUMBER ']'
   {
     i, _ := strconv.Atoi($3.lit)
-    $$ = Declarator{ Identifier: $1, Size: i }
+    $$ = &Declarator{ Identifier: $1, Size: i }
   }
 
 function_prototype
   : TYPE identifier_expression '(' optional_parameters ')' ';'
   {
-    $$ = FunctionDefinition{ pos: $1.pos, TypeName: $1.lit, Identifier: $2, Parameters: $4 }
+    $$ = &FunctionDefinition{ pos: $1.pos, TypeName: $1.lit, Identifier: $2, Parameters: $4 }
   }
 
 function_definition
   : TYPE identifier_expression '(' optional_parameters ')' compound_statement
   {
-    $$ = FunctionDefinition{ pos: $1.pos, TypeName: $1.lit, Identifier: $2, Parameters: $4, Statement: $6 }
+    $$ = &FunctionDefinition{ pos: $1.pos, TypeName: $1.lit, Identifier: $2, Parameters: $4, Statement: $6 }
   }
 
 identifier_expression
@@ -134,7 +134,7 @@ parameter_declaration
 compound_statement
   : '{' optional_declarations optional_statements '}'
   {
-    $$ =  CompoundStatement{ pos: $1.pos, Declarations: $2, Statements: $3 }
+    $$ = &CompoundStatement{ pos: $1.pos, Declarations: $2, Statements: $3 }
   }
 
 optional_declarations
@@ -167,23 +167,23 @@ statement
   | compound_statement
   | IF '(' expression ')' statement
   {
-    $$ = IfStatement{ pos: $1.pos, Condition: $3, TrueStatement: $5 }
+    $$ = &IfStatement{ pos: $1.pos, Condition: $3, TrueStatement: $5 }
   }
   | IF '(' expression ')' statement ELSE statement
   {
-    $$ = IfStatement{ pos: $1.pos, Condition: $3, TrueStatement: $5, FalseStatement: $7 }
+    $$ = &IfStatement{ pos: $1.pos, Condition: $3, TrueStatement: $5, FalseStatement: $7 }
   }
   | WHILE '(' expression ')' statement
   {
-    $$ = WhileStatement{ pos: $1.pos, Condition: $3, Statement: $5 }
+    $$ = &WhileStatement{ pos: $1.pos, Condition: $3, Statement: $5 }
   }
   | FOR '(' optional_expression ';' optional_expression ';' optional_expression ')' statement
   {
-    $$ = ForStatement{ pos: $1.pos, Init: $3, Condition: $5, Loop: $7, Statement: $9 }
+    $$ = &ForStatement{ pos: $1.pos, Init: $3, Condition: $5, Loop: $7, Statement: $9 }
   }
   | RETURN optional_expression ';'
   {
-    $$ = ReturnStatement{ pos: $1.pos, Value: $2 }
+    $$ = &ReturnStatement{ pos: $1.pos, Value: $2 }
   }
 
 optional_expression: { $$ = nil }

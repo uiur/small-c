@@ -16,20 +16,20 @@ func analyzeStatement(statement Statement, env *Env) []error {
 	var errs []error
 
 	switch s := statement.(type) {
-	case FunctionDefinition:
+	case *FunctionDefinition:
 		errs = analyzeFunctionDefinition(s, env)
 
-	case Declaration:
+	case *Declaration:
 		errs = analyzeDeclaration(s, env)
 
-	case CompoundStatement:
+	case *CompoundStatement:
 		errs = analyzeCompoundStatement(s, env)
 
-	case IfStatement:
+	case *IfStatement:
 		errs = analyzeStatement(s.TrueStatement, env)
 		errs = append(errs, analyzeStatement(s.FalseStatement, env)...)
 
-	case WhileStatement:
+	case *WhileStatement:
 		errs = analyzeStatement(s.Statement, env)
 
 	}
@@ -37,7 +37,7 @@ func analyzeStatement(statement Statement, env *Env) []error {
 	return errs
 }
 
-func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
+func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 	errs := []error{}
 
 	identifier := findIdentifierExpression(s.Identifier)
@@ -107,7 +107,7 @@ func analyzeFunctionDefinition(s FunctionDefinition, env *Env) []error {
 	return errs
 }
 
-func analyzeDeclaration(s Declaration, env *Env) []error {
+func analyzeDeclaration(s *Declaration, env *Env) []error {
 	errs := []error{}
 	for _, declarator := range s.Declarators {
 		name := parseIdentifierName(declarator.Identifier)
@@ -134,7 +134,7 @@ func analyzeDeclaration(s Declaration, env *Env) []error {
 	return errs
 }
 
-func analyzeCompoundStatement(s CompoundStatement, env *Env) []error {
+func analyzeCompoundStatement(s *CompoundStatement, env *Env) []error {
 	var errs []error
 	newEnv := env.CreateChild()
 	for _, declaration := range s.Declarations {

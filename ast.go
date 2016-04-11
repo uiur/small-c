@@ -104,7 +104,7 @@ func (e *Declarator) Pos() token.Pos {
 type Declaration struct {
 	pos         token.Pos
 	VarType     string
-	Declarators []Declarator
+	Declarators []*Declarator
 }
 
 func (e *Declaration) Pos() token.Pos { return e.pos }
@@ -119,7 +119,10 @@ type FunctionDefinition struct {
 
 func (e *FunctionDefinition) Pos() token.Pos { return e.pos }
 
-type Statement interface{}
+type Statement interface {
+	Node
+}
+
 type CompoundStatement struct {
 	pos          token.Pos
 	Declarations []Statement

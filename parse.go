@@ -44,7 +44,7 @@ func posToLineInfo(src string, pos int) (int, int) {
 // Walk iterates over statement nodes and replace syntax sugar
 func Walk(statement Statement) Statement {
 	switch s := statement.(type) {
-	case FunctionDefinition:
+	case *FunctionDefinition:
 		for i, p := range s.Parameters {
 			s.Parameters[i] = WalkExpression(p)
 		}
@@ -53,7 +53,7 @@ func Walk(statement Statement) Statement {
 
 		return s
 
-	case CompoundStatement:
+	case *CompoundStatement:
 		for i, st := range s.Statements {
 			s.Statements[i] = Walk(st)
 		}
@@ -64,37 +64,37 @@ func Walk(statement Statement) Statement {
 
 		return s
 
-	case ForStatement:
+	case *ForStatement:
 		// for (init; cond; loop) s
 		// => init; while (cond) { s; loop; }
-		return CompoundStatement{
+		return &CompoundStatement{
 			Statements: []Statement{
-				ExpressionStatement{Value: s.Init},
-				WhileStatement{
+				&ExpressionStatement{Value: s.Init},
+				&WhileStatement{
 					pos:       s.Pos(),
 					Condition: s.Condition,
-					Statement: CompoundStatement{
+					Statement: &CompoundStatement{
 						Statements: []Statement{
 							s.Statement,
-							ExpressionStatement{Value: s.Loop},
+							&ExpressionStatement{Value: s.Loop},
 						},
 					},
 				},
 			},
 		}
 
-	case IfStatement:
+	case *IfStatement:
 		s.Condition = WalkExpression(s.Condition)
 		s.TrueStatement = Walk(s.TrueStatement)
 		s.FalseStatement = Walk(s.FalseStatement)
 
 		return s
 
-	case ReturnStatement:
+	case *ReturnStatement:
 		s.Value = WalkExpression(s.Value)
 		return s
 
-	case ExpressionStatement:
+	case *ExpressionStatement:
 		s.Value = WalkExpression(s.Value)
 		return s
 	}
