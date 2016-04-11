@@ -67,3 +67,16 @@ func TestAdd(t *testing.T) {
 		t.Errorf("kind `proto` can be defined double, but got \"%v\"", err)
 	}
 }
+
+func TestRegister(t *testing.T) {
+	env := &Env{}
+	identifier := &IdentifierExpression{Name: "foo"}
+
+	err := env.Register(identifier, &Symbol{
+		Kind: "var",
+	})
+
+	if !(err == nil && identifier.Symbol.Name == "foo") {
+		t.Errorf("expect identifier.Symbol == `foo`, but: %v", identifier.Symbol)
+	}
+}

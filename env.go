@@ -37,6 +37,17 @@ func (env *Env) Add(symbol *Symbol) error {
 	return nil
 }
 
+func (env *Env) Register(identifier *IdentifierExpression, symbol *Symbol) error {
+	symbol.Name = identifier.Name
+	err := env.Add(symbol)
+
+	if err == nil {
+		identifier.Symbol = symbol
+	}
+
+	return err
+}
+
 type Symbol struct {
 	Name  string
 	Level int

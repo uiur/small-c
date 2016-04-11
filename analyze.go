@@ -61,8 +61,7 @@ func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 		kind = "proto"
 	}
 
-	err := env.Add(&Symbol{
-		Name: identifier.Name,
+	err := env.Register(identifier, &Symbol{
 		Kind: kind,
 		Type: symbolType,
 	})
@@ -72,8 +71,6 @@ func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 			Pos: s.Pos(),
 			Err: err,
 		})
-	} else {
-		identifier.Symbol = env.Table[identifier.Name]
 	}
 
 	if s.Statement != nil {
@@ -83,11 +80,10 @@ func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 			parameter, ok := p.(*ParameterDeclaration)
 
 			if ok {
-				name := parseIdentifierName(parameter.Identifier)
+				identifier := findIdentifierExpression(parameter.Identifier)
 				argType := composeType(parameter.Identifier, BasicType{Name: parameter.TypeName})
 
-				err := paramEnv.Add(&Symbol{
-					Name: name,
+				err := paramEnv.Register(identifier, &Symbol{
 					Kind: "parm",
 					Type: argType,
 				})
@@ -95,7 +91,7 @@ func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 				if err != nil {
 					errs = append(errs, SemanticError{
 						Pos: parameter.Pos(),
-						Err: fmt.Errorf("parameter `%s` is already defined", name),
+						Err: fmt.Errorf("parameter `%s` is already defined", identifier.Name),
 					})
 				}
 			}
@@ -110,15 +106,13 @@ func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 func analyzeDeclaration(s *Declaration, env *Env) []error {
 	errs := []error{}
 	for _, declarator := range s.Declarators {
-		name := parseIdentifierName(declarator.Identifier)
-
 		symbolType := composeType(declarator.Identifier, BasicType{Name: s.VarType})
 		if declarator.Size > 0 {
 			symbolType = ArrayType{Value: symbolType, Size: declarator.Size}
 		}
 
-		err := env.Add(&Symbol{
-			Name: name,
+		identifier := findIdentifierExpression(declarator.Identifier)
+		err := env.Register(identifier, &Symbol{
 			Kind: "var",
 			Type: symbolType,
 		})
