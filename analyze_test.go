@@ -193,4 +193,18 @@ func TestAnalyzeExpression(t *testing.T) {
 			t.Errorf("expect not function error, got %v", errs)
 		}
 	}
+
+	{
+		env := &Env{}
+		errs := analyzeExpression(&UnaryExpression{
+			Operator: "&",
+			Value: &NumberExpression{
+				Value: "10",
+			},
+		}, env)
+
+		if len(errs) != 1 {
+			t.Errorf("expect memory reference error, but got %v", errs)
+		}
+	}
 }

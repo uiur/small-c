@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"errors"
+)
 
 // Analyze ast and register variables to env
 func Analyze(statements []Statement, env *Env) []error {
@@ -184,7 +187,19 @@ func analyzeExpression(expression Expression, env *Env) []error {
 		errs = append(errs, analyzeExpression(e.Right, env)...)
 
 	case *UnaryExpression:
-		return analyzeExpression(e.Value, env)
+		if e.Operator == "&" {
+			switch v := e.Value.(type) {
+			case *ArrayReferenceExpression:
+			case *IdentifierExpression:
+			default:
+				errs = append(errs, SemanticError{
+					Pos: v.Pos(),
+					Err: errors.New("the operand of `&` must be on memory"),
+				})
+			}
+		}
+
+		return append(errs, analyzeExpression(e.Value, env)...)
 
 	case *ArrayReferenceExpression:
 		errs = append(errs, analyzeExpression(e.Target, env)...)
