@@ -80,3 +80,21 @@ func TestRegister(t *testing.T) {
 		t.Errorf("expect identifier.Symbol == `foo`, but: %v", identifier.Symbol)
 	}
 }
+
+func TestGet(t *testing.T) {
+	parent := &Env{}
+	parent.Add(&Symbol{Name: "parent"})
+
+	child := parent.CreateChild()
+	child.Add(&Symbol{Name: "child"})
+
+	symbol := parent.Get("parent")
+	if !(symbol != nil && symbol.Name == "parent") {
+		t.Errorf("should return `parent` symbol: %v", symbol)
+	}
+
+	symbol = child.Get("parent")
+	if !(symbol != nil && symbol.Name == "parent") {
+		t.Errorf("should return `parent` symbol from parent: %v", symbol)
+	}
+}

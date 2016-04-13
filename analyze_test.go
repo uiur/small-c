@@ -126,3 +126,18 @@ func TestAnalyzeCompoundStatement(t *testing.T) {
 		t.Errorf("should have 1 error: %v", errs)
 	}
 }
+
+func TestAnalyzeExpression(t *testing.T) {
+	env := &Env{}
+	env.Add(&Symbol{Name: "foo"})
+
+	errs := analyzeExpression(&IdentifierExpression{Name: "foo"}, env)
+	if len(errs) > 0 {
+		t.Errorf("expect no error, got %v", errs)
+	}
+
+	errs = analyzeExpression(&IdentifierExpression{Name: "bar"}, env)
+	if len(errs) != 1 {
+		t.Errorf("expect reference error, got %v", errs)
+	}
+}

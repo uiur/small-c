@@ -48,6 +48,20 @@ func (env *Env) Register(identifier *IdentifierExpression, symbol *Symbol) error
 	return err
 }
 
+func (env *Env) Get(name string) *Symbol {
+	symbol := env.Table[name]
+
+	if symbol != nil {
+		return symbol
+	}
+
+	if env.Parent != nil {
+		return env.Parent.Get(name)
+	}
+
+	return nil
+}
+
 type Symbol struct {
 	Name  string
 	Level int

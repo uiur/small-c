@@ -37,6 +37,26 @@ func analyzeStatement(statement Statement, env *Env) []error {
 	return errs
 }
 
+func analyzeExpression(expression Expression, env *Env) []error {
+	var errs []error
+
+	switch e := expression.(type) {
+	case *IdentifierExpression:
+		symbol := env.Get(e.Name)
+
+		if symbol == nil {
+			errs = append(errs, SemanticError{
+				Pos: e.Pos(),
+				Err: fmt.Errorf("reference error: `%v` is undefined", e.Name),
+			})
+		} else {
+			e.Symbol = symbol
+		}
+	}
+
+	return errs
+}
+
 func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 	errs := []error{}
 
