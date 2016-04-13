@@ -97,6 +97,8 @@ func TestAnalyzeFunctionDefinition(t *testing.T) {
 	{
 		statements, _ := Parse(`
 	    int foo(int a, int a) {
+				int b;
+
 	      return a + b;
 	    }
 	  `)
@@ -128,16 +130,43 @@ func TestAnalyzeCompoundStatement(t *testing.T) {
 }
 
 func TestAnalyzeExpression(t *testing.T) {
-	env := &Env{}
-	env.Add(&Symbol{Name: "foo"})
+	{
+		env := &Env{}
+		env.Add(&Symbol{Name: "foo"})
 
-	errs := analyzeExpression(&IdentifierExpression{Name: "foo"}, env)
-	if len(errs) > 0 {
-		t.Errorf("expect no error, got %v", errs)
+		errs := analyzeExpression(&IdentifierExpression{Name: "foo"}, env)
+		if len(errs) > 0 {
+			t.Errorf("expect no error, got %v", errs)
+		}
+
+		errs = analyzeExpression(&IdentifierExpression{Name: "bar"}, env)
+		if len(errs) != 1 {
+			t.Errorf("expect reference error, got %v", errs)
+		}
 	}
 
-	errs = analyzeExpression(&IdentifierExpression{Name: "bar"}, env)
-	if len(errs) != 1 {
-		t.Errorf("expect reference error, got %v", errs)
+	{
+		e := &FunctionCallExpression{
+			Identifier: &IdentifierExpression{
+				Name: "foo",
+			},
+			Argument: &ExpressionList{},
+		}
+
+		env := &Env{}
+		env.Add(&Symbol{Name: "foo", Kind: "fun"})
+
+		errs := analyzeExpression(e, env)
+
+		if len(errs) != 0 {
+			t.Errorf("expect no error, but got: %v", errs)
+		}
+
+		env.Table["foo"] = &Symbol{Name: "foo", Kind: "var"}
+		errs = analyzeExpression(e, env)
+
+		if len(errs) != 1 {
+			t.Errorf("expect not function error, got %v", errs)
+		}
 	}
 }

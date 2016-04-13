@@ -26,32 +26,21 @@ func analyzeStatement(statement Statement, env *Env) []error {
 		errs = analyzeCompoundStatement(s, env)
 
 	case *IfStatement:
-		errs = analyzeStatement(s.TrueStatement, env)
+		errs = append(errs, analyzeExpression(s.Condition, env)...)
+		errs = append(errs, analyzeStatement(s.TrueStatement, env)...)
 		errs = append(errs, analyzeStatement(s.FalseStatement, env)...)
 
 	case *WhileStatement:
-		errs = analyzeStatement(s.Statement, env)
+		// ForStatement is converted to WhileStatement
+		errs = analyzeExpression(s.Condition, env)
+		errs = append(errs, analyzeStatement(s.Statement, env)...)
 
-	}
+	case *ExpressionStatement:
+		errs = analyzeExpression(s.Value, env)
 
-	return errs
-}
+	case *ReturnStatement:
+		errs = analyzeExpression(s.Value, env)
 
-func analyzeExpression(expression Expression, env *Env) []error {
-	var errs []error
-
-	switch e := expression.(type) {
-	case *IdentifierExpression:
-		symbol := env.Get(e.Name)
-
-		if symbol == nil {
-			errs = append(errs, SemanticError{
-				Pos: e.Pos(),
-				Err: fmt.Errorf("reference error: `%v` is undefined", e.Name),
-			})
-		} else {
-			e.Symbol = symbol
-		}
 	}
 
 	return errs
@@ -157,6 +146,66 @@ func analyzeCompoundStatement(s *CompoundStatement, env *Env) []error {
 
 	for _, statement := range s.Statements {
 		errs = append(errs, analyzeStatement(statement, newEnv)...)
+	}
+
+	return errs
+}
+
+func analyzeExpression(expression Expression, env *Env) []error {
+	var errs []error
+
+	switch e := expression.(type) {
+	case *IdentifierExpression:
+		symbol := env.Get(e.Name)
+
+		if symbol == nil {
+			errs = append(errs, SemanticError{
+				Pos: e.Pos(),
+				Err: fmt.Errorf("reference error: `%v` is undefined", e.Name),
+			})
+		} else {
+			e.Symbol = symbol
+		}
+
+	case *ExpressionList:
+		for _, value := range e.Values {
+			errs = append(errs, analyzeExpression(value, env)...)
+		}
+
+	case *BinOpExpression:
+		errs = append(errs, analyzeExpression(e.Left, env)...)
+		errs = append(errs, analyzeExpression(e.Right, env)...)
+
+	case *UnaryExpression:
+		return analyzeExpression(e.Value, env)
+
+	case *ArrayReferenceExpression:
+		errs = append(errs, analyzeExpression(e.Target, env)...)
+		errs = append(errs, analyzeExpression(e.Index, env)...)
+
+	case *FunctionCallExpression:
+		identifier := findIdentifierExpression(e.Identifier)
+		symbol := env.Get(identifier.Name)
+		if symbol == nil {
+			return []error{
+				SemanticError{
+					Pos: identifier.Pos(),
+					Err: fmt.Errorf("unknown function `%v` call", identifier.Name),
+				},
+			}
+		}
+
+		if !(symbol.Kind == "fun" || symbol.Kind == "proto") {
+			return []error{
+				SemanticError{
+					Pos: identifier.Pos(),
+					Err: fmt.Errorf("`%v` is not a function", identifier.Name),
+				},
+			}
+		}
+
+		identifier.Symbol = symbol
+		return analyzeExpression(e.Argument, env)
 	}
 
 	return errs
