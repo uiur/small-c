@@ -5,6 +5,20 @@ import (
 	"testing"
 )
 
+func TestAnalyze(t *testing.T) {
+	env := &Env{}
+	statements, _ := Parse(`
+		int sum(int a, int b) {
+			return a + b;
+		}
+	`)
+
+	errs := Analyze(statements, env)
+	if len(errs) != 0 {
+		t.Errorf("expect no error, but got: %v", errs)
+	}
+}
+
 func TestAnalyzeDeclaration(t *testing.T) {
 	{
 		statements, err := Parse("int a, b, c;\n")
