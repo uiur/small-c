@@ -164,7 +164,14 @@ func analyzeExpression(expression Expression, env *Env) []error {
 				Err: fmt.Errorf("reference error: `%v` is undefined", e.Name),
 			})
 		} else {
-			e.Symbol = symbol
+			if !symbol.IsVariable() {
+				errs = append(errs, SemanticError{
+					Pos: e.Pos(),
+					Err: fmt.Errorf("`%v` is not variable", e.Name),
+				})
+			} else {
+				e.Symbol = symbol
+			}
 		}
 
 	case *ExpressionList:

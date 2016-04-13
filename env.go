@@ -69,6 +69,10 @@ type Symbol struct {
 	Type  SymbolType
 }
 
+func (symbol *Symbol) IsVariable() bool {
+	return symbol.Kind == "var" || symbol.Kind == "parm"
+}
+
 type SymbolType interface {
 	String() string
 }
