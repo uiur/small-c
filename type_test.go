@@ -191,3 +191,57 @@ func TestCheckTypeOfWhileStatement(t *testing.T) {
 		}
   }
 }
+
+func TestCheckTypeOfFunctionCallExpression(t *testing.T) {
+  {
+    statements := ast(`
+      int sum(int a, int b) {
+        return a + b;
+      }
+
+      int main() {
+        return sum(1, 2);
+      }
+    `)
+
+		err := CheckType(statements)
+		if err != nil {
+			t.Error(err)
+		}
+  }
+
+  {
+    statements := ast(`
+      int sum(int a, int b) {
+        return a + b;
+      }
+
+      int main() {
+        return sum(1);
+      }
+    `)
+
+		err := CheckType(statements)
+		if err == nil {
+			t.Error("expect argument error, but nil")
+		}
+  }
+
+  {
+    statements := ast(`
+      int sum(int a, int b) {
+        return a + b;
+      }
+
+      int main() {
+        int *a;
+        return sum(1, a);
+      }
+    `)
+
+		err := CheckType(statements)
+		if err == nil {
+			t.Error("expect argument type mismatch error, but nil")
+		}
+  }
+}

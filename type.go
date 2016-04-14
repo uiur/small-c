@@ -167,69 +167,108 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 		}
 
 	case *BinOpExpression:
-		leftType, leftErr := typeOfExpression(e.Left)
-		if leftErr != nil {
-			return nil, leftErr
+		return typeOfBinOpExpression(e)
+
+	case *FunctionCallExpression:
+		var args []Expression
+		switch arg := e.Argument.(type) {
+		case *ExpressionList:
+			args = arg.Values
+		default:
+			args = []Expression{arg}
 		}
 
-		rightType, rightErr := typeOfExpression(e.Right)
-		if rightErr != nil {
-			return nil, rightErr
+		identifier := findIdentifierExpression(e.Identifier)
+		funcType := identifier.Symbol.Type.(FunctionType)
+
+		if len(args) != len(funcType.Args) {
+			return nil, SemanticError{
+				Pos: e.Pos(),
+				Err: fmt.Errorf("function `%v`'s must be called with %v arguments, not %v", identifier.Name, len(funcType.Args), len(args)),
+			}
 		}
 
-		if e.IsArithmetic() {
-			if leftType.String() == "int" && rightType.String() == "int" {
-				return BasicType{ Name: "int" }, nil
+		for i, arg := range args {
+			argType, err := typeOfExpression(arg)
+			if err != nil {
+				return nil, err
 			}
 
-			switch e.Operator {
-			case "+":
-				// int* + int, int + int* -> int*
-				if (leftType.String() == "int*" && rightType.String() == "int") || (leftType.String() == "int" && rightType.String() == "int*") {
-					return Pointer(Int()), nil
-				}
-
-				// int** + int, int + int** -> int**
-				if (leftType.String() == "int**" && rightType.String() == "int") || (leftType.String() == "int" && rightType.String() == "int**") {
-					return Pointer(Pointer(Int())), nil
-				}
-
-			case "-":
-				if leftType.String() == "int*" && rightType.String() == "int" {
-					return Pointer(Int()), nil
-				}
-
-				if leftType.String() == "int**" && rightType.String() == "int" {
-					return Pointer(Pointer(Int())), nil
+			if argType.String() != funcType.Args[i].String() {
+				return nil, SemanticError{
+					Pos: arg.Pos(),
+					Err: fmt.Errorf("type error: argument type mismatch: %v", argType.String()),
 				}
 			}
 		}
 
-		if e.IsAssignment() {
-			if leftType.String() == rightType.String() {
-				return leftType, nil
-			}
-		}
-
-		if e.IsLogical() {
-			if leftType.String() == "int" && rightType.String() == "int" {
-				return Int(), nil
-			}
-		}
-
-		if e.IsEqual() {
-			if leftType.String() == rightType.String() {
-				return Int(), nil
-			}
-		}
-
-		return nil, SemanticError{
-			Pos: e.Pos(),
-			Err: fmt.Errorf("type error: %v %v %v", leftType.String(), e.Operator, rightType.String()),
-		}
+		return funcType.Return, nil
 	}
 
 	return nil, fmt.Errorf("type error: expression %v", expression)
+}
+
+func typeOfBinOpExpression(e *BinOpExpression) (SymbolType, error) {
+	leftType, leftErr := typeOfExpression(e.Left)
+	if leftErr != nil {
+		return nil, leftErr
+	}
+
+	rightType, rightErr := typeOfExpression(e.Right)
+	if rightErr != nil {
+		return nil, rightErr
+	}
+
+	if e.IsArithmetic() {
+		if leftType.String() == "int" && rightType.String() == "int" {
+			return BasicType{ Name: "int" }, nil
+		}
+
+		switch e.Operator {
+		case "+":
+			// int* + int, int + int* -> int*
+			if (leftType.String() == "int*" && rightType.String() == "int") || (leftType.String() == "int" && rightType.String() == "int*") {
+				return Pointer(Int()), nil
+			}
+
+			// int** + int, int + int** -> int**
+			if (leftType.String() == "int**" && rightType.String() == "int") || (leftType.String() == "int" && rightType.String() == "int**") {
+				return Pointer(Pointer(Int())), nil
+			}
+
+		case "-":
+			if leftType.String() == "int*" && rightType.String() == "int" {
+				return Pointer(Int()), nil
+			}
+
+			if leftType.String() == "int**" && rightType.String() == "int" {
+				return Pointer(Pointer(Int())), nil
+			}
+		}
+	}
+
+	if e.IsAssignment() {
+		if leftType.String() == rightType.String() {
+			return leftType, nil
+		}
+	}
+
+	if e.IsLogical() {
+		if leftType.String() == "int" && rightType.String() == "int" {
+			return Int(), nil
+		}
+	}
+
+	if e.IsEqual() {
+		if leftType.String() == rightType.String() {
+			return Int(), nil
+		}
+	}
+
+	return nil, SemanticError{
+		Pos: e.Pos(),
+		Err: fmt.Errorf("type error: %v %v %v", leftType.String(), e.Operator, rightType.String()),
+	}
 }
 
 func checkTypeOfCondition(condition Expression) error {
