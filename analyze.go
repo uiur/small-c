@@ -257,17 +257,6 @@ func analyzeExpression(expression Expression, env *Env) []error {
 	return errs
 }
 
-func parseIdentifierName(expression Expression) string {
-	switch e := expression.(type) {
-	case *IdentifierExpression:
-		return e.Name
-	case *UnaryExpression:
-		return parseIdentifierName(e.Value)
-	}
-
-	return ""
-}
-
 func findIdentifierExpression(expression Expression) *IdentifierExpression {
 	switch e := expression.(type) {
 	case *IdentifierExpression:
