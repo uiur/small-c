@@ -58,6 +58,10 @@ func (e *BinOpExpression) Pos() token.Pos {
 	return e.Left.Pos()
 }
 
+func (e *BinOpExpression) IsArithmetic() bool {
+	return e.Operator == "+" || e.Operator == "-" || e.Operator == "/" || e.Operator == "*"
+}
+
 type FunctionCallExpression struct {
 	Identifier Expression
 	Argument   Expression
