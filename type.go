@@ -76,18 +76,60 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 			return e.Symbol.Type, nil
 		}
 
+	case *ExpressionList:
+		var lastType SymbolType
+
+		for _, value := range e.Values {
+			symbolType, err := typeOfExpression(value)
+
+			if err != nil {
+				return nil, err
+			}
+
+			lastType = symbolType
+		}
+
+		return lastType, nil
+
+	case *UnaryExpression:
+		valueType, err := typeOfExpression(e.Value)
+
+		if err != nil {
+			return nil, err
+		}
+
+		switch e.Operator {
+		case "&":
+			if valueType.String() == "int" {
+				return Pointer(valueType), nil
+			}
+
+		case "*":
+			switch t := valueType.(type) {
+			case PointerType:
+				return t.Value, nil
+
+			default:
+				return nil, SemanticError {
+					Pos: e.Value.Pos(),
+					Err: fmt.Errorf("type error: expect pointer type: %v", e.Value),
+				}
+			}
+
+		}
+
 	case *BinOpExpression:
+		leftType, leftErr := typeOfExpression(e.Left)
+		if leftErr != nil {
+			return nil, leftErr
+		}
+
+		rightType, rightErr := typeOfExpression(e.Right)
+		if rightErr != nil {
+			return nil, rightErr
+		}
+
 		if e.IsArithmetic() {
-			leftType, leftErr := typeOfExpression(e.Left)
-			if leftErr != nil {
-				return nil, leftErr
-			}
-
-			rightType, rightErr := typeOfExpression(e.Right)
-			if rightErr != nil {
-				return nil, rightErr
-			}
-
 			if leftType.String() == "int" && rightType.String() == "int" {
 				return BasicType{ Name: "int" }, nil
 			}
@@ -111,6 +153,24 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 
 				if leftType.String() == "int**" && rightType.String() == "int" {
 					return Pointer(Pointer(Int())), nil
+				}
+			}
+
+			if e.Operator == "=" {
+				if leftType.String() == rightType.String() {
+					return leftType, nil
+				}
+			}
+
+			if e.IsLogical() {
+				if leftType.String() == "int" && rightType.String() == "int" {
+					return Int(), nil
+				}
+			}
+
+			if e.IsEqual() {
+				if leftType.String() == rightType.String() {
+					return Int(), nil
 				}
 			}
 

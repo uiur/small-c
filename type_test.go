@@ -56,7 +56,55 @@ func TestTypeOfExpression(t *testing.T) {
     if symbolType.String() != "int*" {
       t.Errorf("expect int* type, got %v", symbolType)
     }
+  }
+}
 
+func TestTypeOfPointerExpression(t *testing.T) {
+  {
+    // pointer reference: &a
+    expression := &UnaryExpression{
+      Operator: "&",
+      Value: &IdentifierExpression{
+        Name: "a",
+        Symbol: &Symbol{
+          Name: "a",
+          Kind: "var",
+          Type: Int(),
+        },
+      },
+    }
 
+    symbolType, err := typeOfExpression(expression)
+    if err != nil {
+      t.Errorf("expect no error, but got %v", err)
+    }
+
+    if symbolType.String() != "int*" {
+      t.Errorf("expect int* type for `&a`, got %v", symbolType)
+    }
+  }
+
+  {
+    // pointer dereference: *p
+    expression := &UnaryExpression{
+      Operator: "*",
+      Value: &IdentifierExpression{
+        Name: "p",
+        Symbol: &Symbol{
+          Name: "p",
+          Kind: "var",
+          Type: Pointer(Int()),
+        },
+      },
+    }
+
+    symbolType, err := typeOfExpression(expression)
+    if err != nil {
+      t.Errorf("expect no error, but got %v", err)
+    }
+
+    if symbolType.String() != "int" {
+      t.Errorf("expect int type, got %v", symbolType)
+    }
   }
 }

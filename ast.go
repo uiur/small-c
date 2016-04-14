@@ -62,6 +62,21 @@ func (e *BinOpExpression) IsArithmetic() bool {
 	return e.Operator == "+" || e.Operator == "-" || e.Operator == "/" || e.Operator == "*"
 }
 
+func (e *BinOpExpression) IsLogical() bool {
+	return e.Operator == "&&" || e.Operator == "||"
+}
+
+func (e *BinOpExpression) IsEqual() bool {
+	switch e.Operator {
+	case "==", "!=", ">=", ">", "<=", "<":
+		return true
+	}
+
+	return false
+}
+
+
+
 type FunctionCallExpression struct {
 	Identifier Expression
 	Argument   Expression
