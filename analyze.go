@@ -42,6 +42,8 @@ func analyzeStatement(statement Statement, env *Env) []error {
 		errs = analyzeExpression(s.Value, env)
 
 	case *ReturnStatement:
+		// Set current function symbol to check type
+		s.FunctionSymbol = env.Get("#func")
 		errs = analyzeExpression(s.Value, env)
 
 	}
@@ -87,6 +89,11 @@ func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 
 	if s.Statement != nil {
 		paramEnv := env.CreateChild()
+		// Set special symbol to analyze function type
+		paramEnv.Add(&Symbol{
+			Name: "#func",
+			Type: symbolType,
+		})
 
 		for _, p := range s.Parameters {
 			parameter, ok := p.(*ParameterDeclaration)

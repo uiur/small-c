@@ -198,6 +198,7 @@ func (e *ForStatement) Pos() token.Pos { return e.pos }
 type ReturnStatement struct {
 	pos   token.Pos
 	Value Expression
+	FunctionSymbol *Symbol
 }
 
 func (e *ReturnStatement) Pos() token.Pos { return e.pos }

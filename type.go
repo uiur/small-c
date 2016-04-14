@@ -58,6 +58,8 @@ func Pointer(symbolType SymbolType) SymbolType {
 
 // CheckType checks that ast is well-typed
 // statements must be analyzed (should have symbol information)
+// TODO:
+//   * void
 func CheckType(statements []Statement) error {
 	for _, s := range statements {
 		err := CheckTypeOfStatement(s)
@@ -102,10 +104,20 @@ func CheckTypeOfStatement(statement Statement) error {
 		return CheckType(s.Statements())
 
 	case *ReturnStatement:
-		_, err := typeOfExpression(s.Value)
+		valueType, err := typeOfExpression(s.Value)
+		if err != nil {
+			return err
+		}
 
-		return err
+		functionType := s.FunctionSymbol.Type.(FunctionType)
+		if valueType.String() != functionType.Return.String() {
+			return SemanticError{
+				Pos: s.Pos(),
+				Err: fmt.Errorf("type error: must return %v, not %v", functionType.Return, valueType),
+			}
+		}
 
+		return nil
 	}
 
 	return fmt.Errorf("type error: statement %v", statement)

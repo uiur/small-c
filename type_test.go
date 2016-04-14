@@ -245,3 +245,17 @@ func TestCheckTypeOfFunctionCallExpression(t *testing.T) {
 		}
   }
 }
+
+func TestCheckTypeOfReturn(t *testing.T) {
+  statements := ast(`
+    int main() {
+      int *a;
+      return a;
+    }
+  `)
+
+	err := CheckType(statements)
+	if err == nil {
+		t.Error("expect return type mismatch error, but nil")
+	}
+}
