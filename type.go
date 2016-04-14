@@ -52,14 +52,16 @@ func Int() SymbolType {
 	return BasicType{ Name: "int" }
 }
 
+func Void() SymbolType {
+	return BasicType{ Name: "void" }
+}
+
 func Pointer(symbolType SymbolType) SymbolType {
 	return PointerType{ Value: symbolType }
 }
 
 // CheckType checks that ast is well-typed
 // statements must be analyzed (should have symbol information)
-// TODO:
-//   * void
 func CheckType(statements []Statement) error {
 	for _, s := range statements {
 		err := CheckTypeOfStatement(s)
@@ -77,6 +79,22 @@ func CheckTypeOfStatement(statement Statement) error {
 	}
 
 	switch s := statement.(type) {
+	case *Declaration:
+		for _, declarator := range s.Declarators {
+			identifier := findIdentifierExpression(declarator.Identifier)
+			t := identifier.Symbol.Type
+			isVoid := strings.Contains(t.String(), "void")
+
+			if isVoid && t.String() != "void" {
+				return SemanticError{
+					Pos: s.Pos(),
+					Err: fmt.Errorf("type error: void pointer is not allowed"),
+				}
+			}
+		}
+
+		return nil
+
 	case *FunctionDefinition:
 		return CheckTypeOfStatement(s.Statement)
 
@@ -104,9 +122,17 @@ func CheckTypeOfStatement(statement Statement) error {
 		return CheckType(s.Statements())
 
 	case *ReturnStatement:
-		valueType, err := typeOfExpression(s.Value)
-		if err != nil {
-			return err
+		var valueType SymbolType
+
+		if s.Value == nil {
+			valueType = Void()
+		} else {
+			t, err := typeOfExpression(s.Value)
+			valueType = t
+
+			if err != nil {
+				return err
+			}
 		}
 
 		functionType := s.FunctionSymbol.Type.(FunctionType)

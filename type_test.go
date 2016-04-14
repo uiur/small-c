@@ -247,15 +247,91 @@ func TestCheckTypeOfFunctionCallExpression(t *testing.T) {
 }
 
 func TestCheckTypeOfReturn(t *testing.T) {
+  {
+    statements := ast(`
+      int main() {
+        return 1;
+      }
+    `)
+
+  	err := CheckType(statements)
+  	if err != nil {
+  		t.Errorf("expect no error, got %v", err)
+  	}
+  }
+
+  {
+    statements := ast(`
+      int main() {
+        int *a;
+        return a;
+      }
+    `)
+
+  	err := CheckType(statements)
+  	if err == nil {
+  		t.Error("expect return type mismatch error, but nil")
+  	}
+
+  }
+
+  {
+    statements := ast(`
+      void dance() {
+        return;
+      }
+    `)
+
+  	err := CheckType(statements)
+  	if err != nil {
+  		t.Errorf("expect no error, got %v", err)
+  	}
+  }
+}
+
+func TestCheckTypeOfDeclaration(t *testing.T) {
   statements := ast(`
+    int a, b, c;
+    int ary[10];
+    void v;
+
     int main() {
-      int *a;
-      return a;
+      a + b;
     }
   `)
 
 	err := CheckType(statements)
-	if err == nil {
-		t.Error("expect return type mismatch error, but nil")
+	if err != nil {
+		t.Errorf("expect no error, got %v", err)
 	}
+}
+
+func TestCheckVoidType(t *testing.T) {
+  {
+    statements := ast(`
+      int main() {
+        void a;
+        a + 0;
+      }
+    `)
+
+  	err := CheckType(statements)
+  	if err == nil {
+  		t.Errorf("expect void error, but nil")
+  	}
+  }
+
+  {
+    statements := ast(`
+      void *a;
+      int main() {
+        ;
+      }
+    `)
+
+  	err := CheckType(statements)
+  	if err == nil {
+  		t.Errorf("expect void error, but nil")
+  	}
+  }
 }
