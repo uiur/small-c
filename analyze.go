@@ -186,10 +186,34 @@ func analyzeExpression(expression Expression, env *Env) []error {
 		errs = append(errs, analyzeExpression(e.Left, env)...)
 		errs = append(errs, analyzeExpression(e.Right, env)...)
 
+		if e.Operator == "=" {
+			leftIsAssignable := true
+
+			switch left := e.Left.(type) {
+			case *IdentifierExpression:
+				if !left.Symbol.IsVariable() {
+					leftIsAssignable = false
+				}
+
+			case *UnaryExpression:
+				if left.Operator != "*" {
+					leftIsAssignable = false
+				}
+			default:
+				leftIsAssignable = false
+			}
+
+			if !leftIsAssignable {
+				errs = append(errs, SemanticError{
+					Pos: e.Left.Pos(),
+					Err: errors.New("expression is not assignable"),
+				})
+			}
+		}
+
 	case *UnaryExpression:
 		if e.Operator == "&" {
 			switch v := e.Value.(type) {
-			case *ArrayReferenceExpression:
 			case *IdentifierExpression:
 			default:
 				errs = append(errs, SemanticError{

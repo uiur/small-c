@@ -207,4 +207,22 @@ func TestAnalyzeExpression(t *testing.T) {
 			t.Errorf("expect memory reference error, but got %v", errs)
 		}
 	}
+
+	{
+		env := &Env{}
+		env.Add(&Symbol{
+			Name: "f",
+			Kind: "fun",
+		})
+
+		errs := analyzeExpression(&BinOpExpression{
+			Operator: "=",
+			Left: &NumberExpression{ Value: "1" },
+			Right: &NumberExpression{ Value: "2" },
+		}, env)
+
+		if len(errs) != 1 {
+			t.Errorf("expect assignment error, but got: %v", errs)
+		}
+	}
 }
