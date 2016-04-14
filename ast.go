@@ -58,6 +58,10 @@ func (e *BinOpExpression) Pos() token.Pos {
 	return e.Left.Pos()
 }
 
+func (e *BinOpExpression) IsAssignment() bool {
+	return e.Operator == "="
+}
+
 func (e *BinOpExpression) IsArithmetic() bool {
 	return e.Operator == "+" || e.Operator == "-" || e.Operator == "/" || e.Operator == "*"
 }
@@ -166,6 +170,9 @@ type IfStatement struct {
 }
 
 func (e *IfStatement) Pos() token.Pos { return e.pos }
+func (e *IfStatement) Statements() []Statement {
+	return []Statement{ e.TrueStatement, e.FalseStatement }
+}
 
 type WhileStatement struct {
 	pos       token.Pos
@@ -174,6 +181,9 @@ type WhileStatement struct {
 }
 
 func (e *WhileStatement) Pos() token.Pos { return e.pos }
+func (e *WhileStatement) Statements() []Statement {
+	return []Statement{ e.Statement }
+}
 
 type ForStatement struct {
 	pos       token.Pos

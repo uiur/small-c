@@ -229,11 +229,11 @@ equal_expression
   : relation_expression
   | relation_expression EQL relation_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: "==", Right: $3}
   }
   | relation_expression NEQ relation_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinOpExpression{ Left: $1, Operator: "!=", Right: $3}
   }
 
 relation_expression

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -58,9 +57,58 @@ func Pointer(symbolType SymbolType) SymbolType {
 }
 
 // CheckType checks that ast is well-typed
-// statements must be analyzed
-func CheckType(statements []Statement, env *Env) {
+// statements must be analyzed (should have symbol information)
+func CheckType(statements []Statement) error {
+	for _, s := range statements {
+		err := CheckTypeOfStatement(s)
+		if err != nil {
+			return err
+		}
+	}
 
+	return nil
+}
+
+func CheckTypeOfStatement(statement Statement) error {
+	if statement == nil {
+		return nil
+	}
+
+	switch s := statement.(type) {
+	case *FunctionDefinition:
+		return CheckTypeOfStatement(s.Statement)
+
+	case *ExpressionStatement:
+		_, err := typeOfExpression(s.Value)
+		return err
+
+	case *CompoundStatement:
+		return CheckType(s.Statements)
+
+	case *IfStatement:
+		err := checkTypeOfCondition(s.Condition)
+		if err != nil {
+			return err
+		}
+
+		return CheckType(s.Statements())
+
+	case *WhileStatement:
+		err := checkTypeOfCondition(s.Condition)
+		if err != nil {
+			return err
+		}
+
+		return CheckType(s.Statements())
+
+	case *ReturnStatement:
+		_, err := typeOfExpression(s.Value)
+
+		return err
+
+	}
+
+	return fmt.Errorf("type error: statement %v", statement)
 }
 
 func typeOfExpression(expression Expression) (SymbolType, error) {
@@ -155,31 +203,47 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 					return Pointer(Pointer(Int())), nil
 				}
 			}
+		}
 
-			if e.Operator == "=" {
-				if leftType.String() == rightType.String() {
-					return leftType, nil
-				}
+		if e.IsAssignment() {
+			if leftType.String() == rightType.String() {
+				return leftType, nil
 			}
+		}
 
-			if e.IsLogical() {
-				if leftType.String() == "int" && rightType.String() == "int" {
-					return Int(), nil
-				}
+		if e.IsLogical() {
+			if leftType.String() == "int" && rightType.String() == "int" {
+				return Int(), nil
 			}
+		}
 
-			if e.IsEqual() {
-				if leftType.String() == rightType.String() {
-					return Int(), nil
-				}
+		if e.IsEqual() {
+			if leftType.String() == rightType.String() {
+				return Int(), nil
 			}
+		}
 
-			return nil, SemanticError{
-				Pos: e.Pos(),
-				Err: fmt.Errorf("type error: %v %v %v", leftType.String(), e.Operator, rightType.String()),
-			}
+		return nil, SemanticError{
+			Pos: e.Pos(),
+			Err: fmt.Errorf("type error: %v %v %v", leftType.String(), e.Operator, rightType.String()),
 		}
 	}
 
-	return nil, errors.New("type error")
+	return nil, fmt.Errorf("type error: expression %v", expression)
+}
+
+func checkTypeOfCondition(condition Expression) error {
+	t, err := typeOfExpression(condition)
+	if err != nil {
+		return err
+	}
+
+	if t.String() != "int" {
+		return SemanticError{
+			Pos: condition.Pos(),
+			Err: fmt.Errorf("type error: condition must be int, not `%v`", t),
+		}
+	}
+
+	return nil
 }
