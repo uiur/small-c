@@ -332,55 +332,43 @@ func compileIRStatement(statement Statement) IRStatement {
 
     case *BinOpExpression:
       if e.IsAssignment() {
-        assignee := findIdentifierExpression(e.Left)
-        symbol := assignee.Symbol
-
-        switch r := e.Right.(type) {
-        case *UnaryExpression:
-          // a = *p;
-          if r.Operator == "*" {
-            tmp := tmpvar()
-            right, decls, beforeRight := compileIRExpression(r.Value)
-
-            statements := []IRStatement{
-              &IRAssignmentStatement{
-                Var: tmp,
-                Expression: right,
-              },
-              &IRReadStatement{Dest: symbol, Src: tmp},
-            }
-
-            return &IRCompoundStatement{
-              Declarations: append(IRVariableDeclarations([]*Symbol{tmp}), decls...),
-              Statements: append(beforeRight, statements...),
-            }
-          }
-        }
+        // *(p + 2) = 4
 
         right, decls, beforeRight := compileIRExpression(e.Right)
 
         switch left := e.Left.(type) {
         case *UnaryExpression:
-          // tmp = exp
-          // *left = tmp
+          // address = left
+          // tmpRight = exp
+          // *address = tmpRight
           if left.Operator == "*" {
-            tmp := tmpvar()
+            address := tmpvar()
+            tmpRight := tmpvar()
+
+            leftExpression, leftDecls, beforeLeft := compileIRExpression(left.Value)
+            decls = append(decls, leftDecls...)
 
             statements := []IRStatement{
               &IRAssignmentStatement{
-                Var: tmp,
+                Var: address,
+                Expression: leftExpression,
+              },
+              &IRAssignmentStatement{
+                Var: tmpRight,
                 Expression: right,
               },
-              &IRWriteStatement{Dest: symbol, Src: tmp},
+              &IRWriteStatement{Dest: address, Src: tmpRight},
             }
 
             return &IRCompoundStatement{
-              Declarations: append(IRVariableDeclarations([]*Symbol{tmp}), decls...),
-              Statements: append(beforeRight, statements...),
+              Declarations: append(IRVariableDeclarations([]*Symbol{address, tmpRight}), decls...),
+              Statements: append(append(beforeLeft, beforeRight...), statements...),
             }
           }
 
         default:
+          symbol := findIdentifierExpression(e.Left).Symbol
+
           body := &IRAssignmentStatement{
             Var: symbol,
             Expression: right,
@@ -517,6 +505,27 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
     }, nil, nil
 
   case *UnaryExpression:
+    if e.Operator == "*" {
+      result := tmpvar()
+      tmp := tmpvar()
+      irValue, decls, beforeValue := compileIRExpression(e.Value)
+
+      statements := []IRStatement{
+        &IRAssignmentStatement{
+          Var: tmp,
+          Expression: irValue,
+        },
+        &IRReadStatement{Dest: result, Src: tmp},
+      }
+
+      decls = append(IRVariableDeclarations([]*Symbol{result, tmp}), decls...)
+      statements = append(beforeValue, statements...)
+
+      return &IRVariableExpression{
+        Var: result,
+      }, decls, statements
+    }
+
     if e.Operator == "&" {
       value, decls, statements := compileIRExpression(e.Value)
       v, _ := value.(*IRVariableExpression)

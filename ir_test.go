@@ -61,6 +61,19 @@ func TestCompileIR(t *testing.T) {
 
     CompileIR(statements)
   }
+
+  {
+    statements := ast(`
+      int main() {
+        int a[10];
+        int *p;
+        p = a;
+        *(p + 1) = 1;
+      }
+    `)
+
+    CompileIR(statements)
+  }
 }
 
 func TestCompileIRStatement(t *testing.T) {
@@ -92,9 +105,9 @@ func TestCompileIRStatement(t *testing.T) {
       return
     }
 
-    writeStatement, _ := compoundStatement.Statements[1].(*IRWriteStatement)
-    if !(writeStatement.Dest.Name == "p") {
-      t.Errorf("expect WriteStatement.Dest == `p`, %v", ir)
+    _, ok = compoundStatement.Statements[2].(*IRWriteStatement)
+    if !ok {
+      t.Errorf("expect WriteStatement %v", ir)
     }
   }
 
