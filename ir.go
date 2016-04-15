@@ -6,6 +6,7 @@ package main
 
 import (
   "strconv"
+  "strings"
   "fmt"
   "github.com/k0kubun/pp"
 )
@@ -16,11 +17,32 @@ type IRProgram struct {
   Functions []*IRFunctionDefinition
 }
 
-type IRStatement interface {}
-type IRExpression interface {}
+func (s *IRProgram) String() string {
+  var declStrs []string
+  for _, decl := range s.Declarations {
+    declStrs = append(declStrs, decl.String())
+  }
+
+  var stmtStrs []string
+  for _, statement := range s.Functions {
+    stmtStrs = append(stmtStrs, statement.String())
+  }
+
+  return strings.Join(declStrs, "\n") + "\n\n" + strings.Join(stmtStrs, "\n")
+}
+
+type IRStatement interface {
+  String() string
+}
+type IRExpression interface {
+  String() string
+}
 
 type IRVariableDeclaration struct {
   Var *Symbol
+}
+func (s *IRVariableDeclaration) String() string {
+  return fmt.Sprintf("%v %v", s.Var.Type, s.Var.Name)
 }
 
 type IRFunctionDefinition struct {
@@ -29,9 +51,22 @@ type IRFunctionDefinition struct {
   Body IRStatement
 }
 
+func (s *IRFunctionDefinition) String() string {
+  var params []string
+  for _, p := range s.Parameters {
+    params = append(params, p.String())
+  }
+
+  return fmt.Sprintf("%v(%v)\n%v", s.Var.Name, strings.Join(params, ", "), s.Body)
+}
+
 type IRAssignmentStatement struct {
   Var *Symbol
   Expression IRExpression
+}
+
+func (s *IRAssignmentStatement) String() string {
+  return fmt.Sprintf("%v = %v", s.Var.Name, s.Expression)
 }
 
 type IRWriteStatement struct {
@@ -39,13 +74,25 @@ type IRWriteStatement struct {
   Src *Symbol
 }
 
+func (s *IRWriteStatement) String() string {
+  return fmt.Sprintf("*%v = %v", s.Dest.Name, s.Src.Name)
+}
+
 type IRReadStatement struct {
   Dest *Symbol
   Src *Symbol
 }
 
+func (s *IRReadStatement) String() string {
+  return fmt.Sprintf("%v = *%v", s.Dest.Name, s.Src.Name)
+}
+
 type IRLabelStatement struct {
   Name string
+}
+
+func (s *IRLabelStatement) String() string {
+  return fmt.Sprintf("%s:", s.Name)
 }
 
 type IRIfStatement struct {
@@ -54,8 +101,20 @@ type IRIfStatement struct {
   FalseLabel string
 }
 
+func (s *IRIfStatement) String() string {
+  if len(s.FalseLabel) == 0 {
+    return fmt.Sprintf("if (%s) goto %s", s.Var.Name, s.TrueLabel)
+  }
+
+  return fmt.Sprintf("if (%s) { goto %s } else { goto %s }", s.Var.Name, s.TrueLabel, s.FalseLabel)
+}
+
 type IRGotoStatement struct {
   Label string
+}
+
+func (s *IRGotoStatement) String() string {
+  return fmt.Sprintf("goto %s", s.Label)
 }
 
 type IRCallStatement struct {
@@ -64,17 +123,54 @@ type IRCallStatement struct {
   Vars []*Symbol
 }
 
+func (s *IRCallStatement) String() string {
+  var args []string
+  for _, symbol := range s.Vars {
+    args = append(args, symbol.Name)
+  }
+
+  return fmt.Sprintf("%s = %s(%s)", s.Dest.Name, s.Func.Name, strings.Join(args, ", "))
+}
+
 type IRReturnStatement struct {
   Var *Symbol
+}
+
+func (s *IRReturnStatement) String() string {
+  return fmt.Sprintf("return %s", s.Var.Name)
 }
 
 type IRPrintStatement struct {
   Var *Symbol
 }
 
+func (s *IRPrintStatement) String() string {
+  return fmt.Sprintf("print(%s)", s.Var.Name)
+}
+
 type IRCompoundStatement struct {
   Declarations []*IRVariableDeclaration
   Statements []IRStatement
+}
+
+func (s *IRCompoundStatement) String() string {
+  var declStrs []string
+  for _, decl := range s.Declarations {
+    declStrs = append(declStrs, decl.String())
+  }
+
+  var stmtStrs []string
+  for _, statement := range s.Statements {
+    stmtStrs = append(stmtStrs, statement.String())
+  }
+
+  str := ""
+  if len(declStrs) > 0 {
+    str += strings.Join(declStrs, "\n") + "\n"
+  }
+  str += strings.Join(stmtStrs, "\n")
+
+  return str
 }
 
 // IRExpression
@@ -83,8 +179,16 @@ type IRVariableExpression struct {
   Var *Symbol
 }
 
+func (e *IRVariableExpression) String() string {
+  return e.Var.Name
+}
+
 type IRNumberExpression struct {
   Value int
+}
+
+func (e *IRNumberExpression) String() string {
+  return strconv.Itoa(e.Value)
 }
 
 type IRBinaryExpression struct {
@@ -93,8 +197,16 @@ type IRBinaryExpression struct {
   Right IRExpression
 }
 
+func (e *IRBinaryExpression) String() string {
+  return fmt.Sprintf("(%s %v %v)", e.Operator, e.Left, e.Right)
+}
+
 type IRAddressExpression struct {
   Var *Symbol
+}
+
+func (e *IRAddressExpression) String() string {
+  return fmt.Sprintf("&%v", e.Var.Name)
 }
 
 var counter = map[string]int {}
@@ -280,9 +392,13 @@ func compileIRStatement(statement Statement) IRStatement {
       compileIRStatement(s.TrueStatement),
       &IRGotoStatement{ Label: endLabel },
       &IRLabelStatement{ Name: falseLabel },
-      compileIRStatement(s.FalseStatement),
-      &IRLabelStatement{ Name: endLabel },
     }
+
+    if s.FalseStatement != nil {
+      statements = append(statements, compileIRStatement(s.FalseStatement))
+    }
+
+    statements = append(statements, &IRLabelStatement{ Name: endLabel })
 
     return &IRCompoundStatement{
       Declarations: append(IRVariableDeclarations([]*Symbol{conditionVar}), decls...),
@@ -290,10 +406,7 @@ func compileIRStatement(statement Statement) IRStatement {
     }
 
   case *WhileStatement:
-    conditionVar := &Symbol {
-      Name: "#tmp",
-      Type: Int(),
-    }
+    conditionVar := tmpvar()
 
     beginLabel := label("while-begin")
     endLabel := label("while-end")

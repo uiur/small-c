@@ -26,6 +26,7 @@ func TestCompileIR(t *testing.T) {
     statements := ast(`
       int main() {
         int a;
+
         if (a > 0) {
           a = 1;
         } else {
