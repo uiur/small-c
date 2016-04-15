@@ -1,5 +1,4 @@
 // TODO:
-//   * prototype
 //   * function call
 //   * print
 //   * return
@@ -112,6 +111,7 @@ func tmpvar() *Symbol {
     Type: Int(),
   }
 }
+
 // CompileIR convert Statements to intermediate representation
 func CompileIR(statements []Statement) *IRProgram {
   var decls []*IRVariableDeclaration
@@ -150,6 +150,10 @@ func compileIRStatement(statement Statement) IRStatement {
 
   switch s := statement.(type) {
   case *FunctionDefinition:
+    if s.Statement == nil {
+      return nil
+    }
+
     identifier := findIdentifierExpression(s.Identifier)
 
     var paramSymbols []*Symbol
