@@ -4,15 +4,6 @@ import (
 	"testing"
 )
 
-func ast(src string) []Statement {
-	statements, _ := Parse(src)
-
-	env := &Env{}
-	Analyze(statements, env)
-
-  return statements
-}
-
 func TestTypeOfExpression(t *testing.T) {
 	{
 		env := &Env{}

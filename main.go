@@ -49,7 +49,7 @@ func main() {
 		Exit(src, []error{err})
 	}
 
-	pp.Println(statements, env)
+	pp.Println(CompileIR(statements))
 }
 
 func Exit(src string, errs []error) {

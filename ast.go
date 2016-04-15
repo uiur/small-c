@@ -79,8 +79,6 @@ func (e *BinOpExpression) IsEqual() bool {
 	return false
 }
 
-
-
 type FunctionCallExpression struct {
 	Identifier Expression
 	Argument   Expression
