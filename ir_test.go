@@ -15,7 +15,6 @@ func TestCompileIR(t *testing.T) {
     `)
 
     ir := CompileIR(statements)
-    pp.Println(ir)
 
     if len(ir.Functions) != 1 {
       t.Errorf("expect len(functions) == 1, got %v", len(ir.Functions))
@@ -48,8 +47,7 @@ func TestCompileIR(t *testing.T) {
       }
     `)
 
-    ir := CompileIR(statements)
-    pp.Println(ir)
+    CompileIR(statements)
   }
 
   {

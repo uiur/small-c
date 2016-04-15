@@ -1,7 +1,5 @@
 // TODO:
-//   * function call
 //   * print
-//   * return
 package main
 
 import (
@@ -28,7 +26,7 @@ func (s *IRProgram) String() string {
     stmtStrs = append(stmtStrs, statement.String())
   }
 
-  return strings.Join(declStrs, "\n") + "\n\n" + strings.Join(stmtStrs, "\n")
+  return strings.Join(declStrs, "\n") + "\n\n" + strings.Join(stmtStrs, "\n\n")
 }
 
 type IRStatement interface {
@@ -434,7 +432,20 @@ func compileIRStatement(statement Statement) IRStatement {
     }
 
   case *ReturnStatement:
-    panic("not implemented")
+    // return exp;
+    //
+    // tmp = <exp>
+    // return tmp
+    tmp := tmpvar()
+
+    value, decls, beforeValue := compileIRExpression(s.Value)
+    return &IRCompoundStatement{
+      Declarations: append(IRVariableDeclarations([]*Symbol{tmp}), decls...),
+      Statements: append(beforeValue,
+        &IRAssignmentStatement{ Var: tmp, Expression: value },
+        &IRReturnStatement{ Var: tmp },
+      ),
+    }
 
   default:
     pp.Println(s)
@@ -555,6 +566,50 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
       Left: left,
       Right: right,
     }, append(leftDecls, rightDecls...), append(beforeLeft, beforeRight...)
+
+  case *FunctionCallExpression:
+		var args []Expression
+		switch arg := e.Argument.(type) {
+		case *ExpressionList:
+			args = arg.Values
+		default:
+			args = []Expression{arg}
+		}
+
+    var argSymbols []*Symbol
+    var statements []IRStatement
+    var decls []*IRVariableDeclaration
+
+    for _, arg := range args {
+      tmp := tmpvar()
+      argSymbols = append(argSymbols, tmp)
+
+      expression, expressionDecls, beforeExpression := compileIRExpression(arg)
+
+      decls = append(decls, expressionDecls...)
+
+      statements = append(statements, beforeExpression...)
+      statements = append(statements, &IRAssignmentStatement{
+        Var: tmp,
+        Expression: expression,
+      })
+    }
+
+    funcIdentifier := findIdentifierExpression(e.Identifier)
+
+    result := tmpvar()
+
+    // result = f(a0, a1, ...)
+    statements = append(statements, &IRCallStatement{
+      Dest: result,
+      Func: funcIdentifier.Symbol,
+      Vars: argSymbols,
+    })
+
+    decls = append(decls, IRVariableDeclarations(append(argSymbols, result))...)
+    return &IRVariableExpression{
+      Var: result,
+    }, decls, statements
 
   default:
     panic("unexpected expression")
