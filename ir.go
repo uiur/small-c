@@ -588,6 +588,28 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
     left, leftDecls, beforeLeft := compileIRExpression(e.Left)
     right, rightDecls, beforeRight := compileIRExpression(e.Right)
 
+    t, _ := typeOfExpression(e)
+    switch t.(type) {
+    case PointerType:
+      leftType, _ := typeOfExpression(e.Left)
+
+      if _, isInt := leftType.(BasicType); isInt {
+        // 4 * r + l
+        left = &IRBinaryExpression{
+          Operator: "*",
+          Left: &IRNumberExpression{ Value: 4 }, // int -> 4 bytes
+          Right: left,
+        }
+      } else {
+        // l + 4 * r
+        right = &IRBinaryExpression{
+          Operator: "*",
+          Left: &IRNumberExpression{ Value: 4 }, // int -> 4 bytes
+          Right: right,
+        }
+      }
+    }
+
     return &IRBinaryExpression{
       Operator: e.Operator,
       Left: left,
