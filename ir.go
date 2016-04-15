@@ -1,5 +1,5 @@
 // TODO:
-//   * print
+//   * ExpressionList
 package main
 
 import (
@@ -303,6 +303,26 @@ func compileIRStatement(statement Statement) IRStatement {
   case *ExpressionStatement:
     switch e := s.Value.(type) {
     case *ExpressionList:
+    case *FunctionCallExpression:
+      name := findIdentifierExpression(e.Identifier).Name
+      if name == "print" {
+        tmp := tmpvar()
+        arg, decls, beforeArg := compileIRExpression(e.Argument)
+
+        return &IRCompoundStatement{
+          Declarations: append(decls, &IRVariableDeclaration{ Var: tmp }),
+          Statements: append(beforeArg,
+            &IRAssignmentStatement{
+              Var: tmp,
+              Expression: arg,
+            },
+            &IRPrintStatement{
+              Var: tmp,
+            },
+          ),
+        }
+      }
+
     case *BinOpExpression:
       if e.IsAssignment() {
         assignee := findIdentifierExpression(e.Left)
@@ -568,6 +588,8 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
     }, append(leftDecls, rightDecls...), append(beforeLeft, beforeRight...)
 
   case *FunctionCallExpression:
+    funcIdentifier := findIdentifierExpression(e.Identifier)
+
 		var args []Expression
 		switch arg := e.Argument.(type) {
 		case *ExpressionList:
@@ -594,8 +616,6 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
         Expression: expression,
       })
     }
-
-    funcIdentifier := findIdentifierExpression(e.Identifier)
 
     result := tmpvar()
 
