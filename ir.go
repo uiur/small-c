@@ -99,10 +99,10 @@ type IRIfStatement struct {
 
 func (s *IRIfStatement) String() string {
   if len(s.FalseLabel) == 0 {
-    return fmt.Sprintf("if (%s) goto %s", s.Var.Name, s.TrueLabel)
+    return fmt.Sprintf("if (%s) %s", s.Var.Name, s.TrueLabel)
   }
 
-  return fmt.Sprintf("if (%s) { goto %s } else { goto %s }", s.Var.Name, s.TrueLabel, s.FalseLabel)
+  return fmt.Sprintf("if (%s) %s else %s", s.Var.Name, s.TrueLabel, s.FalseLabel)
 }
 
 type IRGotoStatement struct {
