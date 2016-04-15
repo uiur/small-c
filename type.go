@@ -146,7 +146,10 @@ func CheckTypeOfStatement(statement Statement) error {
 		return nil
 	}
 
-	return fmt.Errorf("type error: statement %v", statement)
+	return SemanticError {
+		Pos: statement.Pos(),
+		Err: fmt.Errorf("type error: statement %v", statement),
+	}
 }
 
 func typeOfExpression(expression Expression) (SymbolType, error) {

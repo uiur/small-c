@@ -67,6 +67,7 @@ func Walk(statement Statement) Statement {
 	case *ForStatement:
 		// for (init; cond; loop) s
 		// => init; while (cond) { s; loop; }
+		body := Walk(s.Statement)
 		return &CompoundStatement{
 			Statements: []Statement{
 				&ExpressionStatement{Value: s.Init},
@@ -75,7 +76,7 @@ func Walk(statement Statement) Statement {
 					Condition: s.Condition,
 					Statement: &CompoundStatement{
 						Statements: []Statement{
-							s.Statement,
+							body,
 							&ExpressionStatement{Value: s.Loop},
 						},
 					},
