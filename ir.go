@@ -1,5 +1,3 @@
-// TODO:
-//   * ExpressionList
 package main
 
 import (
@@ -303,6 +301,15 @@ func compileIRStatement(statement Statement) IRStatement {
   case *ExpressionStatement:
     switch e := s.Value.(type) {
     case *ExpressionList:
+      var statements []IRStatement
+      for _, value := range e.Values {
+        statements = append(statements, compileIRStatement(&ExpressionStatement{ Value: value }))
+      }
+
+      return &IRCompoundStatement{
+        Statements: statements,
+      }
+
     case *FunctionCallExpression:
       name := findIdentifierExpression(e.Identifier).Name
       if name == "print" {
