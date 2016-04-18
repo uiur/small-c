@@ -208,73 +208,73 @@ assign_expression
   : logical_or_expression
   | logical_or_expression '=' logical_or_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: "=", Right: $3 }
+    $$ = &BinaryExpression{ Left: $1, Operator: "=", Right: $3 }
   }
 
 logical_or_expression
   : logical_and_expression
   | logical_and_expression LOGICAL_OR logical_and_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 logical_and_expression
   : equal_expression
   | equal_expression LOGICAL_AND equal_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 equal_expression
   : relation_expression
   | relation_expression EQL relation_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: "==", Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: "==", Right: $3}
   }
   | relation_expression NEQ relation_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: "!=", Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: "!=", Right: $3}
   }
 
 relation_expression
   : add_expression
   | add_expression '>' add_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: ">", Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: ">", Right: $3}
   }
   | add_expression '<' add_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: "<", Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: "<", Right: $3}
   }
   | add_expression GEQ add_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
   | add_expression LEQ add_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: $2.lit, Right: $3}
   }
 
 add_expression
   : mult_expression
   | add_expression '+' mult_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: "+", Right: $3 }
+    $$ = &BinaryExpression{ Left: $1, Operator: "+", Right: $3 }
   }
   | add_expression '-' mult_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: "-", Right: $3 }
+    $$ = &BinaryExpression{ Left: $1, Operator: "-", Right: $3 }
   }
 
 mult_expression
   : unary_expression
   | mult_expression '*' primary_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: "*", Right: $3 }
+    $$ = &BinaryExpression{ Left: $1, Operator: "*", Right: $3 }
   }
   | mult_expression '/' primary_expression
   {
-    $$ = &BinOpExpression{ Left: $1, Operator: "/", Right: $3 }
+    $$ = &BinaryExpression{ Left: $1, Operator: "/", Right: $3 }
   }
 
 unary_expression

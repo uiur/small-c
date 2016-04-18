@@ -88,7 +88,7 @@ func TestCompileIRStatement(t *testing.T) {
     // tmp = a
     // *p = tmp
     s := &ExpressionStatement{
-      Value: &BinOpExpression{
+      Value: &BinaryExpression{
         Operator: "=",
         Left: &UnaryExpression{
           Operator: "*",
@@ -114,7 +114,7 @@ func TestCompileIRStatement(t *testing.T) {
   {
     // a = *p;
     s := &ExpressionStatement{
-      Value: &BinOpExpression{
+      Value: &BinaryExpression{
         Operator: "=",
         Left: &IdentifierExpression{ Symbol: symbolA },
         Right: &UnaryExpression {
@@ -139,7 +139,7 @@ func TestCompileIRStatement(t *testing.T) {
 
 func TestCompileIRExpression(t *testing.T) {
   // 0 || 1
-  e := &BinOpExpression{
+  e := &BinaryExpression{
     Operator: "||",
     Left: &NumberExpression{ Value: "0" },
     Right: &NumberExpression{ Value: "1" },

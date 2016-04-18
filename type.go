@@ -207,8 +207,8 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 
 		}
 
-	case *BinOpExpression:
-		return typeOfBinOpExpression(e)
+	case *BinaryExpression:
+		return typeOfBinaryExpression(e)
 
 	case *FunctionCallExpression:
 		var args []Expression
@@ -249,7 +249,7 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 	return nil, fmt.Errorf("type error: expression %v", expression)
 }
 
-func typeOfBinOpExpression(e *BinOpExpression) (SymbolType, error) {
+func typeOfBinaryExpression(e *BinaryExpression) (SymbolType, error) {
 	leftType, leftErr := typeOfExpression(e.Left)
 	if leftErr != nil {
 		return nil, leftErr

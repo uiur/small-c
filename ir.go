@@ -330,7 +330,7 @@ func compileIRStatement(statement Statement) IRStatement {
         }
       }
 
-    case *BinOpExpression:
+    case *BinaryExpression:
       if e.IsAssignment() {
         // *(p + 2) = 4
 
@@ -535,7 +535,7 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
       }, decls, statements
     }
 
-  case *BinOpExpression:
+  case *BinaryExpression:
     // return (a || b) && c
     // v;
     // if (a) {
@@ -679,7 +679,7 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
 
 func assignStatementBySymbol(symbol *Symbol, value int) *ExpressionStatement {
   return &ExpressionStatement {
-    Value: &BinOpExpression{
+    Value: &BinaryExpression{
       Operator: "=",
       Left: &IdentifierExpression{ Symbol: symbol },
       Right: &NumberExpression{ Value: strconv.Itoa(value) },

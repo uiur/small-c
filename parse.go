@@ -112,7 +112,7 @@ func WalkExpression(expression Expression) Expression {
 
 		return e
 
-	case *BinOpExpression:
+	case *BinaryExpression:
 		e.Left = WalkExpression(e.Left)
 		e.Right = WalkExpression(e.Right)
 
@@ -122,7 +122,7 @@ func WalkExpression(expression Expression) Expression {
 		e.Value = WalkExpression(e.Value)
 
 		if e.Operator == "-" {
-			return &BinOpExpression{
+			return &BinaryExpression{
 				Left:     &NumberExpression{pos: e.Pos(), Value: "0"},
 				Operator: "-",
 				Right:    e.Value,
@@ -146,7 +146,7 @@ func WalkExpression(expression Expression) Expression {
 
 		return &UnaryExpression{
 			Operator: "*",
-			Value: &BinOpExpression{
+			Value: &BinaryExpression{
 				Left:     e.Target,
 				Operator: "+",
 				Right:    e.Index,

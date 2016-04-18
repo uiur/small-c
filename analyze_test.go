@@ -215,7 +215,7 @@ func TestAnalyzeExpression(t *testing.T) {
 			Kind: "fun",
 		})
 
-		errs := analyzeExpression(&BinOpExpression{
+		errs := analyzeExpression(&BinaryExpression{
 			Operator: "=",
 			Left: &NumberExpression{ Value: "1" },
 			Right: &NumberExpression{ Value: "2" },

@@ -48,29 +48,29 @@ type UnaryExpression struct {
 
 func (e *UnaryExpression) Pos() token.Pos { return e.pos }
 
-type BinOpExpression struct {
+type BinaryExpression struct {
 	Left     Expression
 	Operator string
 	Right    Expression
 }
 
-func (e *BinOpExpression) Pos() token.Pos {
+func (e *BinaryExpression) Pos() token.Pos {
 	return e.Left.Pos()
 }
 
-func (e *BinOpExpression) IsAssignment() bool {
+func (e *BinaryExpression) IsAssignment() bool {
 	return e.Operator == "="
 }
 
-func (e *BinOpExpression) IsArithmetic() bool {
+func (e *BinaryExpression) IsArithmetic() bool {
 	return e.Operator == "+" || e.Operator == "-" || e.Operator == "/" || e.Operator == "*"
 }
 
-func (e *BinOpExpression) IsLogical() bool {
+func (e *BinaryExpression) IsLogical() bool {
 	return e.Operator == "&&" || e.Operator == "||"
 }
 
-func (e *BinOpExpression) IsEqual() bool {
+func (e *BinaryExpression) IsEqual() bool {
 	switch e.Operator {
 	case "==", "!=", ">=", ">", "<=", "<":
 		return true

@@ -189,7 +189,7 @@ func analyzeExpression(expression Expression, env *Env) []error {
 			errs = append(errs, analyzeExpression(value, env)...)
 		}
 
-	case *BinOpExpression:
+	case *BinaryExpression:
 		errs = append(errs, analyzeExpression(e.Left, env)...)
 		errs = append(errs, analyzeExpression(e.Right, env)...)
 

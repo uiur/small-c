@@ -14,7 +14,7 @@ func TestTypeOfExpression(t *testing.T) {
 			Type: BasicType{Name: "int"},
 		})
 
-		expression := &BinOpExpression{
+		expression := &BinaryExpression{
 			Operator: "+",
 			Left:     &NumberExpression{Value: "42"},
 			Right:    identifier,
@@ -33,7 +33,7 @@ func TestTypeOfExpression(t *testing.T) {
 	{
 		// int a[10];
 		// a - 1;
-		expression := &BinOpExpression{
+		expression := &BinaryExpression{
 			Operator: "-",
 			Left: &IdentifierExpression{
 				Name: "a",

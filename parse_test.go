@@ -182,9 +182,9 @@ func TestWalkExpression(t *testing.T) {
 			Value:    &NumberExpression{Value: "42"},
 		})
 
-		_, ok := e.(*BinOpExpression)
+		_, ok := e.(*BinaryExpression)
 		if !ok {
-			t.Errorf("expect *BinOpExpression")
+			t.Errorf("expect *BinaryExpression")
 		}
 	}
 
@@ -213,9 +213,9 @@ func TestWalkExpression(t *testing.T) {
 		})
 
 		unaryExpression, ok := e.(*UnaryExpression)
-		_, isBinOp := (unaryExpression.Value).(*BinOpExpression)
+		_, isBinary := (unaryExpression.Value).(*BinaryExpression)
 
-		if !(ok && unaryExpression.Operator == "*" && isBinOp) {
+		if !(ok && unaryExpression.Operator == "*" && isBinary) {
 			t.Errorf("it should be *(a + 10), but: %v", e)
 		}
 	}
