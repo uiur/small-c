@@ -5,6 +5,8 @@ import (
 
 	"io/ioutil"
 	"os"
+
+	"github.com/k0kubun/pp"
 )
 
 func main() {
@@ -33,33 +35,11 @@ func main() {
 		statements[i] = Walk(statement)
 	}
 
-	prelude, _ := Parse("void print(int i);\n")
-	statements = append(prelude, statements...)
-
-	env := &Env{}
-	errs := Analyze(statements, env)
-	if len(errs) > 0 {
-		Exit(src, errs)
-	}
-
-	err = CheckType(statements)
-	if err != nil {
-		Exit(src, []error{err})
-	}
-
-	fmt.Println(CompileIR(statements))
+	pp.Println(statements)
 }
 
 func Exit(src string, errs []error) {
 	for _, err := range errs {
-		switch e := err.(type) {
-		case SemanticError:
-			lineNumber, columnNumber := posToLineInfo(src, int(e.Pos))
-			err = fmt.Errorf("%d:%d: %v", lineNumber, columnNumber, e.Err)
-
-		default:
-		}
-
 		fmt.Fprintln(os.Stderr, err)
 	}
 

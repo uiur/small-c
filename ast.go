@@ -35,7 +35,6 @@ func (e *NumberExpression) Pos() token.Pos { return e.pos }
 type IdentifierExpression struct {
 	pos    token.Pos
 	Name   string
-	Symbol *Symbol
 }
 
 func (e *IdentifierExpression) Pos() token.Pos { return e.pos }
@@ -196,7 +195,6 @@ func (e *ForStatement) Pos() token.Pos { return e.pos }
 type ReturnStatement struct {
 	pos   token.Pos
 	Value Expression
-	FunctionSymbol *Symbol
 }
 
 func (e *ReturnStatement) Pos() token.Pos { return e.pos }
