@@ -66,6 +66,7 @@ type Symbol struct {
 	Level int
 	Kind  string
 	Type  SymbolType
+	Offset int
 }
 
 func (symbol *Symbol) IsVariable() bool {

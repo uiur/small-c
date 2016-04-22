@@ -45,6 +45,7 @@ type IRFunctionDefinition struct {
   Var *Symbol
   Parameters []*IRVariableDeclaration
   Body IRStatement
+  VarSize int
 }
 
 func (s *IRFunctionDefinition) String() string {
@@ -207,7 +208,7 @@ func (e *IRAddressExpression) String() string {
 
 var counter = map[string]int {}
 func label(name string) string {
-  labelName := fmt.Sprintf("%s-%d", name, counter[name])
+  labelName := fmt.Sprintf("%s_%d", name, counter[name])
   counter[name]++
 
   return labelName
@@ -428,8 +429,8 @@ func compileIRStatement(statement Statement) IRStatement {
   case *WhileStatement:
     conditionVar := tmpvar()
 
-    beginLabel := label("while-begin")
-    endLabel := label("while-end")
+    beginLabel := label("while_begin")
+    endLabel := label("while_end")
 
     condition, decls, beforeCondition := compileIRExpression(s.Condition)
 

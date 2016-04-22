@@ -49,8 +49,14 @@ func main() {
 		Exit(src, []error{err})
 	}
 
-	pp.Println(CompileIR(statements))
-	fmt.Println(CompileIR(statements))
+	irProgram := CompileIR(statements)
+	code := Compile(irProgram)
+
+	if len(os.Getenv("DEBUG")) > 0 {
+		pp.Println(irProgram)
+	}
+
+	fmt.Println(code)
 }
 
 func Exit(src string, errs []error) {
