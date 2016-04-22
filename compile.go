@@ -79,10 +79,11 @@ func compileFunction(function *IRFunctionDefinition) []string {
     code = append(code, fmt.Sprintf("sw $a%d, %d($fp)", i, p.Var.Offset))
   }
 
-  code = append(code, compileStatement(function.Body)...)
+  code = append(code, compileStatement(function.Body, function)...)
 
   code = append(
     code,
+    function.Var.Name + "_exit:",
     "lw $fp, 0($sp)",
     "lw $ra, 4($sp)",
     fmt.Sprintf("addi $sp, $sp, %d", size),
@@ -92,13 +93,13 @@ func compileFunction(function *IRFunctionDefinition) []string {
   return code
 }
 
-func compileStatement(statement IRStatement) []string {
+func compileStatement(statement IRStatement, function *IRFunctionDefinition) []string {
   var code []string
 
   switch s := statement.(type) {
   case *IRCompoundStatement:
     for _, statement := range s.Statements {
-      code = append(code, compileStatement(statement)...)
+      code = append(code, compileStatement(statement, function)...)
     }
 
   case *IRAssignmentStatement:
@@ -114,12 +115,26 @@ func compileStatement(statement IRStatement) []string {
     code = append(code, fmt.Sprintf("sw $v0, %d($fp)", s.Dest.Offset))
 
   case *IRReturnStatement:
-    code = append(code, lw("$v0", s.Var))
+    code = append(code,
+      lw("$v0", s.Var),
+      fmt.Sprintf("j %s_exit", function.Var.Name),
+    )
 
   case *IRWriteStatement:
   case *IRReadStatement:
   case *IRLabelStatement:
+    return append(code, s.Name + ":")
   case *IRIfStatement:
+    falseLabel := label("ir_if_false")
+
+    code = append(code,
+      lw("$t0", s.Var),
+      fmt.Sprintf("beq $t0, $zero, %s", falseLabel),
+      fmt.Sprintf("j %s", s.TrueLabel),
+      falseLabel + ":",
+      fmt.Sprintf("j %s", s.FalseLabel),
+    )
+
   case *IRGotoStatement:
   case *IRPrintStatement:
     return []string{
@@ -141,15 +156,32 @@ func assignExpression(register string, expression IRExpression) []string {
     code = append(code, fmt.Sprintf("li %s, %d", register, e.Value))
 
   case *IRBinaryExpression:
-    switch e.Operator {
-    case "+":
-      code = append(code, assignExpression("$t1", e.Left)...)
-      code = append(code, assignExpression("$t2", e.Right)...)
-      code = append(code, fmt.Sprintf("add %s, $t1, $t2", register))
+    inst := operatorToInst[e.Operator]
 
-    default:
-      panic("implement!")
+    code = append(code, assignExpression("$t1", e.Left)...)
+    code = append(code, assignExpression("$t2", e.Right)...)
+
+    if e.Operator == "==" {
+      falseLabel := label("beq_true")
+      endLabel := label("beq_end")
+
+      code = append(code,
+        fmt.Sprintf("beq $t1, $t2, %s", falseLabel),
+        li(register, 0),
+        fmt.Sprintf("j %s", endLabel),
+        falseLabel + ":",
+        li(register, 1),
+        endLabel + ":",
+      )
+
+      return code
     }
+
+    if len(inst) == 0 {
+      panic("unimplemented operator: " + e.Operator)
+    }
+
+    code = append(code, fmt.Sprintf("%s %s, $t1, $t2", inst, register))
 
   case *IRVariableExpression:
     code = append(code, lw(register, e.Var))
@@ -158,6 +190,17 @@ func assignExpression(register string, expression IRExpression) []string {
   }
 
   return code
+}
+
+var operatorToInst = map[string]string{
+  "+": "add",
+  "-": "sub",
+  "*": "mul",
+  "/": "div",
+}
+
+func li(register string, value int) string {
+  return fmt.Sprintf("li %s, %d", register, value)
 }
 
 func lw(register string, symbol *Symbol) string {

@@ -268,11 +268,11 @@ add_expression
 
 mult_expression
   : unary_expression
-  | mult_expression '*' primary_expression
+  | mult_expression '*' unary_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "*", Right: $3 }
   }
-  | mult_expression '/' primary_expression
+  | mult_expression '/' unary_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "/", Right: $3 }
   }
