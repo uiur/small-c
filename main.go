@@ -5,6 +5,8 @@ import (
 
 	"io/ioutil"
 	"os"
+
+	"github.com/k0kubun/pp"
 )
 
 func main() {
@@ -47,6 +49,7 @@ func main() {
 		Exit(src, []error{err})
 	}
 
+	pp.Println(CompileIR(statements))
 	fmt.Println(CompileIR(statements))
 }
 

@@ -382,6 +382,13 @@ func compileIRStatement(statement Statement) IRStatement {
       }
     }
 
+    _, decls, beforeValue := compileIRExpression(s.Value)
+
+    return &IRCompoundStatement{
+      Declarations: decls,
+      Statements: beforeValue,
+    }
+
   case *IfStatement:
     conditionVar := tmpvar()
 
