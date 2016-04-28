@@ -59,7 +59,7 @@ func main() {
 	code := Compile(irProgram)
 
 	if debug {
-		pp.Println(irProgram)
+		fmt.Println(irProgram)
 	}
 
 	fmt.Println(code)

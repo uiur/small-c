@@ -7,10 +7,20 @@ import (
 
 type SymbolType interface {
 	String() string
+
+	ByteSize() int
 }
 
 type BasicType struct {
 	Name string
+}
+
+func (t BasicType) ByteSize() int {
+	if t.Name == "int" {
+		return 4
+	}
+
+	return 0
 }
 
 func (t BasicType) String() string {
@@ -19,6 +29,10 @@ func (t BasicType) String() string {
 
 type PointerType struct {
 	Value SymbolType
+}
+
+func (t PointerType) ByteSize() int {
+	return Int().ByteSize()
 }
 
 func (t PointerType) String() string {
@@ -30,6 +44,10 @@ type ArrayType struct {
 	Size  int
 }
 
+func (t ArrayType) ByteSize() int {
+	return t.Value.ByteSize() * t.Size
+}
+
 func (t ArrayType) String() string {
 	return fmt.Sprintf("%s[%d]", t.Value.String(), t.Size)
 }
@@ -37,6 +55,10 @@ func (t ArrayType) String() string {
 type FunctionType struct {
 	Return SymbolType
 	Args   []SymbolType
+}
+
+func (t FunctionType) ByteSize() int {
+	return 0
 }
 
 func (t FunctionType) String() string {

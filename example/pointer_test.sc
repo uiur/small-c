@@ -2,6 +2,7 @@ int main() {
   int a;
   int b;
   int *p;
+
   a = 1;
 
   p = &a;

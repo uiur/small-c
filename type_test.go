@@ -326,3 +326,15 @@ func TestCheckVoidType(t *testing.T) {
   	}
   }
 }
+
+func TestTypeSize(t *testing.T) {
+	if Int().ByteSize() != 4 {
+		t.Errorf("expect size of int == 4, got %v", Int().ByteSize())
+	}
+
+	arrayType := ArrayType{ Value: Int(), Size: 4 }
+	expected := 4 * 4
+	if arrayType.ByteSize() != expected {
+		t.Errorf("expect size of array[4] == %v, got %v", expected, arrayType.ByteSize())
+	}
+}

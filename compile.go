@@ -5,6 +5,9 @@ import (
   "strings"
 )
 
+// TODO:
+// global vars
+
 func CalculateOffset(ir *IRProgram) {
   for _, f := range ir.Functions {
     calculateOffsetFunction(f)
@@ -16,8 +19,9 @@ func calculateOffsetFunction(ir *IRFunctionDefinition) {
 
   for i := len(ir.Parameters)-1; i >= 0; i-- {
     p := ir.Parameters[i]
-    p.Var.Offset = offset
-    offset -= 4
+    size := p.Var.Type.ByteSize()
+    p.Var.Offset = offset - (size - 4)
+    offset -= size
   }
 
   minOffset := calculateOffsetStatement(ir.Body, offset)
@@ -31,8 +35,9 @@ func calculateOffsetStatement(statement IRStatement, base int) int {
   switch s := statement.(type) {
   case *IRCompoundStatement:
     for _, d := range s.Declarations {
-      d.Var.Offset = offset
-      offset -= 4
+      size := d.Var.Type.ByteSize()
+      d.Var.Offset = offset - (size - 4)
+      offset -= size
     }
 
     minOffset = offset
@@ -192,18 +197,34 @@ func assignExpression(register string, expression IRExpression) []string {
     code = append(code, fmt.Sprintf("li %s, %d", register, e.Value))
 
   case *IRBinaryExpression:
-
     leftRegister := "$t1"
     rightRegister := "$t2"
 
     code = append(code, assignExpression(leftRegister, e.Left)...)
+    code = append(code,
+      "addi $sp, $sp, -4",
+      fmt.Sprintf("sw %s, 0($sp)", leftRegister),
+    )
     code = append(code, assignExpression(rightRegister, e.Right)...)
+    code = append(code,
+      fmt.Sprintf("lw %s, 0($sp)", leftRegister),
+      "addi $sp, $sp, 4",
+    )
 
     operation := assignBinaryOperation(register, e.Operator, leftRegister, rightRegister)
+
     return append(code, operation...)
 
   case *IRVariableExpression:
-    code = append(code, lw(register, e.Var))
+    // *(a + 4)
+    _, isArrayType := e.Var.Type.(ArrayType)
+    if isArrayType {
+      return []string{
+        fmt.Sprintf("addi %s, $fp, %d", register, e.Var.Offset),
+      }
+    }
+
+    return append(code, lw(register, e.Var))
 
   case *IRAddressExpression:
     return []string {

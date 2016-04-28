@@ -112,6 +112,11 @@ func WalkExpression(expression Expression) Expression {
 
 		return e
 
+	case *FunctionCallExpression:
+		e.Argument = WalkExpression(e.Argument)
+
+		return e
+
 	case *BinaryExpression:
 		e.Left = WalkExpression(e.Left)
 		e.Right = WalkExpression(e.Right)
