@@ -128,6 +128,7 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
 
   case *IRLabelStatement:
     return append(code, s.Name + ":")
+
   case *IRIfStatement:
     falseLabel := label("ir_if_false")
     endLabel := label("ir_if_end")
@@ -170,7 +171,6 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
       lw("$a0", s.Var),
       "syscall",
     }
-
   }
 
   return code
@@ -184,40 +184,15 @@ func assignExpression(register string, expression IRExpression) []string {
     code = append(code, fmt.Sprintf("li %s, %d", register, e.Value))
 
   case *IRBinaryExpression:
-    inst := operatorToInst[e.Operator]
 
-    code = append(code, assignExpression("$t1", e.Left)...)
-    code = append(code, assignExpression("$t2", e.Right)...)
+    leftRegister := "$t1"
+    rightRegister := "$t2"
 
-    switch e.Operator {
-    case "==":
-      falseLabel := label("beq_true")
-      endLabel := label("beq_end")
+    code = append(code, assignExpression(leftRegister, e.Left)...)
+    code = append(code, assignExpression(rightRegister, e.Right)...)
 
-      code = append(code,
-        fmt.Sprintf("beq $t1, $t2, %s", falseLabel),
-        li(register, 0),
-        fmt.Sprintf("j %s", endLabel),
-        falseLabel + ":",
-        li(register, 1),
-        endLabel + ":",
-      )
-
-      return code
-
-    case ">":
-      // a > b <=> !(a < b)
-    case ">=":
-      // a >= b <=> a > b || a == b
-    case "<=":
-
-    }
-
-    if len(inst) == 0 {
-      panic("unimplemented operator: " + e.Operator)
-    }
-
-    code = append(code, fmt.Sprintf("%s %s, $t1, $t2", inst, register))
+    operation := assignBinaryOperation(register, e.Operator, leftRegister, rightRegister)
+    return append(code, operation...)
 
   case *IRVariableExpression:
     code = append(code, lw(register, e.Var))
@@ -226,6 +201,49 @@ func assignExpression(register string, expression IRExpression) []string {
   }
 
   return code
+}
+
+func assignBinaryOperation(register string, operator string, left string, right string) []string {
+  inst := operatorToInst[operator]
+  if len(inst) > 0 {
+    return []string {
+      fmt.Sprintf("%s %s, %s, %s", inst, register, left, right),
+    }
+  }
+
+  switch operator {
+  case "==":
+    falseLabel := label("beq_true")
+    endLabel := label("beq_end")
+
+    return []string{
+      fmt.Sprintf("beq $t1, $t2, %s", falseLabel),
+      li(register, 0),
+      fmt.Sprintf("j %s", endLabel),
+      falseLabel + ":",
+      li(register, 1),
+      endLabel + ":",
+    }
+
+  case ">":
+    // a > b <=> (a <= b) < 1
+    return append(assignBinaryOperation(register, "<=", left, right),
+      fmt.Sprintf("slti %s, %s, 1", register, register),
+    )
+
+  case "<=":
+    // a <= b <=> a - 1 < b
+    return []string{
+      "addi $t1, $t1, -1",
+      fmt.Sprintf("slt %s, %s, %s", register, left, right),
+    }
+
+  case ">=":
+    // a >= b <=> b <= a
+    return assignBinaryOperation(register, "<=", right, left)
+  }
+
+  panic("unimplemented operator: " + operator)
 }
 
 var operatorToInst = map[string]string{
