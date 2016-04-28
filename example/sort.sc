@@ -11,6 +11,7 @@ int main() {
   data[3] = 3;
 
   size = 4;
+
   for (i = 0; i < size; i = i + 1) {
     for (j = 1; j < size; j = j + 1) {
       if (data[j] < data[j-1]) {
