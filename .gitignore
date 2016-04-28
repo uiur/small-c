@@ -36,3 +36,5 @@ parser.go
 *.dvi
 *.log
 *.aux
+
+example/*.s

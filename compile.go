@@ -121,21 +121,49 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
     )
 
   case *IRWriteStatement:
+    panic("IRWriteStatement not implemented")
+
   case *IRReadStatement:
+    panic("IRReadStatement not implemented")
+
   case *IRLabelStatement:
     return append(code, s.Name + ":")
   case *IRIfStatement:
     falseLabel := label("ir_if_false")
+    endLabel := label("ir_if_end")
 
     code = append(code,
       lw("$t0", s.Var),
       fmt.Sprintf("beq $t0, $zero, %s", falseLabel),
-      fmt.Sprintf("j %s", s.TrueLabel),
+    )
+
+    if len(s.TrueLabel) > 0 {
+      code = append(code,
+        fmt.Sprintf("j %s", s.TrueLabel),
+      )
+    } else {
+      code = append(code,
+        fmt.Sprintf("j %s", endLabel),
+      )
+    }
+
+    code = append(code,
       falseLabel + ":",
-      fmt.Sprintf("j %s", s.FalseLabel),
+    )
+
+    if len(s.FalseLabel) > 0 {
+      code = append(code,
+        fmt.Sprintf("j %s", s.FalseLabel),
+      )
+    }
+
+    code = append(code,
+      endLabel + ":",
     )
 
   case *IRGotoStatement:
+    code = append(code, jmp(s.Label))
+
   case *IRPrintStatement:
     return []string{
       "li $v0, 1",
@@ -161,7 +189,8 @@ func assignExpression(register string, expression IRExpression) []string {
     code = append(code, assignExpression("$t1", e.Left)...)
     code = append(code, assignExpression("$t2", e.Right)...)
 
-    if e.Operator == "==" {
+    switch e.Operator {
+    case "==":
       falseLabel := label("beq_true")
       endLabel := label("beq_end")
 
@@ -175,6 +204,13 @@ func assignExpression(register string, expression IRExpression) []string {
       )
 
       return code
+
+    case ">":
+      // a > b <=> !(a < b)
+    case ">=":
+      // a >= b <=> a > b || a == b
+    case "<=":
+
     }
 
     if len(inst) == 0 {
@@ -197,6 +233,11 @@ var operatorToInst = map[string]string{
   "-": "sub",
   "*": "mul",
   "/": "div",
+  "<": "slt",
+}
+
+func jmp(label string) string {
+  return fmt.Sprintf("j %s", label)
 }
 
 func li(register string, value int) string {

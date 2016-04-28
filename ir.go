@@ -433,13 +433,13 @@ func compileIRStatement(statement Statement) IRStatement {
     endLabel := label("while_end")
 
     condition, decls, beforeCondition := compileIRExpression(s.Condition)
+    statements := append([]IRStatement{ &IRLabelStatement{ Name: beginLabel } }, beforeCondition...)
 
-    statements := []IRStatement{
+    statements = append(statements,
       &IRAssignmentStatement{
         Var: conditionVar,
         Expression: condition,
       },
-      &IRLabelStatement{ Name: beginLabel },
       &IRIfStatement{
         Var: conditionVar,
         FalseLabel: endLabel,
@@ -447,11 +447,11 @@ func compileIRStatement(statement Statement) IRStatement {
       compileIRStatement(s.Statement),
       &IRGotoStatement{ Label: beginLabel },
       &IRLabelStatement{ Name: endLabel },
-    }
+    )
 
     return &IRCompoundStatement{
       Declarations: append(IRVariableDeclarations([]*Symbol{conditionVar}), decls...),
-      Statements: append(beforeCondition, statements...),
+      Statements: statements,
     }
 
   case *ReturnStatement:
