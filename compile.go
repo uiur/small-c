@@ -5,9 +5,6 @@ import (
   "strings"
 )
 
-// TODO:
-// global vars
-
 func CalculateOffset(ir *IRProgram) {
   for _, f := range ir.Functions {
     calculateOffsetFunction(f)
