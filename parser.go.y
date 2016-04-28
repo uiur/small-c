@@ -248,11 +248,11 @@ relation_expression
   }
   | add_expression GEQ add_expression
   {
-    $$ = &BinaryExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: ">=", Right: $3}
   }
   | add_expression LEQ add_expression
   {
-    $$ = &BinaryExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: "<=", Right: $3}
   }
 
 add_expression
@@ -268,11 +268,11 @@ add_expression
 
 mult_expression
   : unary_expression
-  | mult_expression '*' primary_expression
+  | mult_expression '*' unary_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "*", Right: $3 }
   }
-  | mult_expression '/' primary_expression
+  | mult_expression '/' unary_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "/", Right: $3 }
   }
