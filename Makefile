@@ -1,10 +1,10 @@
-all: goget app
+all: deps build
 
-app: parser.go
+build: parser.go
 	go build
 
-goget:
-	go get -v ./...
+deps:
+	go get -d -v
 
 parser.go: parser.go.y
 	go tool yacc -o parser.go parser.go.y
