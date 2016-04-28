@@ -1,5 +1,10 @@
-main: parser.go
+all: goget app
+
+app: parser.go
 	go build
+
+goget:
+	go get -v ./...
 
 parser.go: parser.go.y
 	go tool yacc -o parser.go parser.go.y
