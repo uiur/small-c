@@ -121,10 +121,18 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
     )
 
   case *IRWriteStatement:
-    panic("IRWriteStatement not implemented")
+    return []string {
+      lw("$t0", s.Src),
+      lw("$t1", s.Dest),
+      "sw $t0, 0($t1)",
+    }
 
   case *IRReadStatement:
-    panic("IRReadStatement not implemented")
+    return []string {
+      lw("$t0", s.Src),
+      "lw $t1, 0($t0)",
+      sw("$t1", s.Dest),
+    }
 
   case *IRLabelStatement:
     return append(code, s.Name + ":")
@@ -198,6 +206,9 @@ func assignExpression(register string, expression IRExpression) []string {
     code = append(code, lw(register, e.Var))
 
   case *IRAddressExpression:
+    return []string {
+      fmt.Sprintf("addi %s, $fp, %d", register, e.Var.Offset),
+    }
   }
 
   return code
@@ -262,6 +273,10 @@ func li(register string, value int) string {
   return fmt.Sprintf("li %s, %d", register, value)
 }
 
-func lw(register string, symbol *Symbol) string {
-  return fmt.Sprintf("lw %s, %d($fp)", register, symbol.Offset)
+func lw(register string, src *Symbol) string {
+  return fmt.Sprintf("lw %s, %d($fp)", register, src.Offset)
+}
+
+func sw(register string, dest *Symbol) string {
+  return fmt.Sprintf("sw %s, %d($fp)", register, dest.Offset)
 }
