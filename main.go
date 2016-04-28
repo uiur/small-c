@@ -25,12 +25,19 @@ func main() {
 		src = string(data)
 	}
 
+	code, errs := CompileSource(src)
+	if len(errs) > 0 {
+		Exit(src, errs)
+	}
+	fmt.Println(code)
+}
+
+func CompileSource(src string) (string, []error) {
 	debug := len(os.Getenv("DEBUG")) > 0
 
 	statements, err := Parse(src)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return "", []error{err}
 	}
 
 	for i, statement := range statements {
@@ -47,12 +54,12 @@ func main() {
 	env := &Env{}
 	errs := Analyze(statements, env)
 	if len(errs) > 0 {
-		Exit(src, errs)
+		return "", errs
 	}
 
 	err = CheckType(statements)
 	if err != nil {
-		Exit(src, []error{err})
+		return "", []error{err}
 	}
 
 	irProgram := CompileIR(statements)
@@ -62,7 +69,7 @@ func main() {
 		fmt.Println(irProgram)
 	}
 
-	fmt.Println(code)
+	return code, nil
 }
 
 func Exit(src string, errs []error) {
