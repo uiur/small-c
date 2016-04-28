@@ -120,8 +120,13 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
     code = append(code, fmt.Sprintf("sw $v0, %d($fp)", s.Dest.Offset))
 
   case *IRReturnStatement:
+    if s.Var != nil {
+      code = append(code,
+        lw("$v0", s.Var),
+      )
+    }
+
     code = append(code,
-      lw("$v0", s.Var),
       fmt.Sprintf("j %s_exit", function.Var.Name),
     )
 
@@ -266,7 +271,7 @@ func assignBinaryOperation(register string, operator string, left string, right 
   case "<=":
     // a <= b <=> a - 1 < b
     return []string{
-      "addi $t1, $t1, -1",
+      fmt.Sprintf("addi %s, %s, -1", left, left),
       fmt.Sprintf("slt %s, %s, %s", register, left, right),
     }
 

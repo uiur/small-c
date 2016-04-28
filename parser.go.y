@@ -215,14 +215,14 @@ logical_or_expression
   : logical_and_expression
   | logical_and_expression LOGICAL_OR logical_and_expression
   {
-    $$ = &BinaryExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: "||", Right: $3}
   }
 
 logical_and_expression
   : equal_expression
   | equal_expression LOGICAL_AND equal_expression
   {
-    $$ = &BinaryExpression{ Left: $1, Operator: $2.lit, Right: $3}
+    $$ = &BinaryExpression{ Left: $1, Operator: "&&", Right: $3}
   }
 
 equal_expression

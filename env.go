@@ -24,7 +24,8 @@ func (env *Env) Add(symbol *Symbol) error {
 	}
 
 	name := symbol.Name
-	if symbol.Kind != "proto" && env.Table[name] != nil {
+	found := env.Table[name]
+	if found != nil && found.Kind != "proto" {
 		return fmt.Errorf("`%s` is already defined", name)
 	}
 

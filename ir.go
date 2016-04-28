@@ -459,6 +459,11 @@ func compileIRStatement(statement Statement) IRStatement {
     //
     // tmp = <exp>
     // return tmp
+
+    if s.Value == nil {
+      return &IRReturnStatement{}
+    }
+
     tmp := tmpvar()
 
     value, decls, beforeValue := compileIRExpression(s.Value)
