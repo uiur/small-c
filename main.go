@@ -25,6 +25,8 @@ func main() {
 		src = string(data)
 	}
 
+	debug := len(os.Getenv("DEBUG")) > 0
+
 	statements, err := Parse(src)
 	if err != nil {
 		fmt.Println(err)
@@ -33,6 +35,10 @@ func main() {
 
 	for i, statement := range statements {
 		statements[i] = Walk(statement)
+	}
+
+	if debug {
+		pp.Println(statements)
 	}
 
 	prelude, _ := Parse("void print(int i);\n")
@@ -52,7 +58,7 @@ func main() {
 	irProgram := CompileIR(statements)
 	code := Compile(irProgram)
 
-	if len(os.Getenv("DEBUG")) > 0 {
+	if debug {
 		pp.Println(irProgram)
 	}
 

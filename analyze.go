@@ -198,8 +198,13 @@ func analyzeExpression(expression Expression, env *Env) []error {
 
 			switch left := e.Left.(type) {
 			case *IdentifierExpression:
-				if !left.Symbol.IsVariable() {
-					leftIsAssignable = false
+				expressionErrs := analyzeExpression(left, env)
+				errs = append(errs, expressionErrs...)
+
+				if len(errs) == 0 {
+					if !left.Symbol.IsVariable() {
+						leftIsAssignable = false
+					}
 				}
 
 			case *UnaryExpression:
