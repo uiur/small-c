@@ -74,6 +74,18 @@ func (symbol *Symbol) IsVariable() bool {
 	return symbol.Kind == "var" || symbol.Kind == "parm"
 }
 
+func (symbol *Symbol) IsGlobal() bool {
+	return symbol.Level == 0
+}
+
+func (symbol *Symbol) AddressPointer() string {
+	if symbol.IsGlobal() {
+		return "$gp"
+	} else {
+		return "$fp"
+	}
+}
+
 type SemanticError struct {
 	error
 	Pos token.Pos

@@ -6,6 +6,14 @@ import (
 )
 
 func CalculateOffset(ir *IRProgram) {
+  globalOffset := 0
+  // global vars
+  for _, d := range ir.Declarations {
+    size := d.Var.Type.ByteSize()
+    globalOffset -= size
+    d.Var.Offset = globalOffset
+  }
+
   for _, f := range ir.Functions {
     calculateOffsetFunction(f)
   }
@@ -61,6 +69,7 @@ func Compile(program *IRProgram) string {
   CalculateOffset(program)
 
   code := ""
+  code += ".data\n"
   code += ".text\n.globl main\n"
   for _, f := range program.Functions {
     code += "\n" + strings.Join(compileFunction(f), "\n") + "\n"
@@ -115,7 +124,7 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
 
   case *IRAssignmentStatement:
     code = append(code, assignExpression("$t0", s.Expression)...)
-    code = append(code, fmt.Sprintf("sw $t0, %d($fp)", s.Var.Offset))
+    code = append(code, sw("$t0", s.Var))
 
   case *IRCallStatement:
     for i := len(s.Vars)-1; i >=0; i-- {
@@ -128,7 +137,7 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
           fmt.Sprintf("sw %s, 0($sp)", "$t0"),
         )
       } else {
-        code = append(code, fmt.Sprintf("lw $a%d, %d($fp)", i, v.Offset))
+        code = append(code, lw(fmt.Sprintf("$a%d", i), v))
       }
     }
 
@@ -136,7 +145,7 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
     if len(s.Vars) > 4 {
       code = append(code, fmt.Sprintf("addi $sp, $sp, %d", 4 * (len(s.Vars) - 4)))
     }
-    code = append(code, fmt.Sprintf("sw $v0, %d($fp)", s.Dest.Offset))
+    code = append(code, sw("$v0", s.Dest))
 
   case *IRReturnStatement:
     if s.Var != nil {
@@ -244,7 +253,7 @@ func assignExpression(register string, expression IRExpression) []string {
     _, isArrayType := e.Var.Type.(ArrayType)
     if isArrayType {
       return []string{
-        fmt.Sprintf("addi %s, $fp, %d", register, e.Var.Offset),
+        fmt.Sprintf("addi %s, %s, %d", register, e.Var.AddressPointer(), e.Var.Offset),
       }
     }
 
@@ -252,7 +261,7 @@ func assignExpression(register string, expression IRExpression) []string {
 
   case *IRAddressExpression:
     return []string {
-      fmt.Sprintf("addi %s, $fp, %d", register, e.Var.Offset),
+      fmt.Sprintf("addi %s, %s, %d", register, e.Var.AddressPointer(), e.Var.Offset),
     }
   }
 
@@ -319,9 +328,9 @@ func li(register string, value int) string {
 }
 
 func lw(register string, src *Symbol) string {
-  return fmt.Sprintf("lw %s, %d($fp)", register, src.Offset)
+  return fmt.Sprintf("lw %s, %d(%s)", register, src.Offset, src.AddressPointer())
 }
 
 func sw(register string, dest *Symbol) string {
-  return fmt.Sprintf("sw %s, %d($fp)", register, dest.Offset)
+  return fmt.Sprintf("sw %s, %d(%s)", register, dest.Offset, dest.AddressPointer())
 }

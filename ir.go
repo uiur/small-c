@@ -217,6 +217,7 @@ func label(name string) string {
 func tmpvar() *Symbol {
   return &Symbol{
     Name: label("#tmp"),
+    Level: 2, // not global
     Type: Int(),
   }
 }
