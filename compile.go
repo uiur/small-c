@@ -17,8 +17,14 @@ func calculateOffsetFunction(ir *IRFunctionDefinition) {
   for i := len(ir.Parameters)-1; i >= 0; i-- {
     p := ir.Parameters[i]
     size := p.Var.Type.ByteSize()
-    p.Var.Offset = offset - (size - 4)
-    offset -= size
+
+    // arg 4 => 4($fp), arg 5 => 8($fp)
+    if i >= 4 {
+      p.Var.Offset = (i - 3) * size
+    } else {
+      p.Var.Offset = offset - (size - 4)
+      offset -= size
+    }
   }
 
   minOffset := calculateOffsetStatement(ir.Body, offset)
@@ -78,7 +84,10 @@ func compileFunction(function *IRFunctionDefinition) []string {
 
   for i := len(function.Parameters)-1; i >= 0; i-- {
     p := function.Parameters[i]
-    code = append(code, fmt.Sprintf("sw $a%d, %d($fp)", i, p.Var.Offset))
+    // arg 4,5,6... is passed via 4($fp), 8($fp), ...
+    if i < 4 {
+      code = append(code, fmt.Sprintf("sw $a%d, %d($fp)", i, p.Var.Offset))
+    }
   }
 
   code = append(code, compileStatement(function.Body, function)...)
@@ -109,11 +118,24 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
     code = append(code, fmt.Sprintf("sw $t0, %d($fp)", s.Var.Offset))
 
   case *IRCallStatement:
-    for i, v := range s.Vars {
-      code = append(code, fmt.Sprintf("lw $a%d, %d($fp)", i, v.Offset))
+    for i := len(s.Vars)-1; i >=0; i-- {
+      v := s.Vars[i]
+
+      if i >= 4 {
+        code = append(code, lw("$t0", v))
+        code = append(code,
+          "addi $sp, $sp, -4",
+          fmt.Sprintf("sw %s, 0($sp)", "$t0"),
+        )
+      } else {
+        code = append(code, fmt.Sprintf("lw $a%d, %d($fp)", i, v.Offset))
+      }
     }
 
     code = append(code, fmt.Sprintf("jal %s", s.Func.Name))
+    if len(s.Vars) > 4 {
+      code = append(code, fmt.Sprintf("addi $sp, $sp, %d", 4 * (len(s.Vars) - 4)))
+    }
     code = append(code, fmt.Sprintf("sw $v0, %d($fp)", s.Dest.Offset))
 
   case *IRReturnStatement:
