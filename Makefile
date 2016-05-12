@@ -12,7 +12,7 @@ parser.go: parser.go.y
 test: parser.go
 	go test -cover ./...
 
-report: report/1.pdf
+report: report/1.pdf report/2.pdf
 
 report/%.pdf: %.dvi
 	dvipdfmx -o $@ $<
