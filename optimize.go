@@ -1,8 +1,5 @@
 package main
 
-import (
-  // "github.com/k0kubun/pp"
-)
 
 type DataflowBlock struct {
   Name string
@@ -53,9 +50,9 @@ func Optimize(program *IRProgram) *IRProgram {
     }
 
     buildDataflowGraph(blocks)
+    searchReachingDefinitions(blocks)
     blockOut := searchReachingDefinitions(blocks)
     allStatementState := reachingDefinitionsOfStatements(blocks, blockOut, statements)
-
     foldConstant(statements, allStatementState)
   }
 
@@ -75,6 +72,7 @@ func searchReachingDefinitions(blocks []*DataflowBlock) map[*DataflowBlock]Block
         changed = true
       }
 
+
       blockOut[block] = inState
     }
   }
@@ -93,8 +91,8 @@ func reachingDefinitionsOfStatements(blocks []*DataflowBlock, blockOut map[*Data
     }
 
     for _, statement := range statements {
-      inState = analyzeReachingDefinition(statement, inState)
       allStatementState[statement] = inState
+      inState = analyzeReachingDefinition(statement, inState)
     }
   }
 
@@ -128,7 +126,7 @@ func foldConstantExpression(statement IRStatement, expression IRExpression, allS
   case *IRVariableExpression:
     symbol := e.Var
     definitionOfVar := allStatementState[statement][symbol]
-    if len(definitionOfVar) == 1 {
+    if len(definitionOfVar) == 1 && definitionOfVar[0] != statement {
       return foldConstantStatement(definitionOfVar[0], allStatementState)
     }
 
@@ -208,8 +206,20 @@ func foldConstantExpression(statement IRStatement, expression IRExpression, allS
 func analyzeBlock(blockOut map[*DataflowBlock]BlockState, block *DataflowBlock) BlockState {
   inState := BlockState{}
   for _, prevBlock := range block.Prev {
-    for key, value := range blockOut[prevBlock] {
-      inState[key] = append(inState[key], value...)
+    for key, statements := range blockOut[prevBlock] {
+      for _, statement := range statements {
+        found := false
+        for _, v := range inState[key] {
+          if v == statement {
+            found = true
+            break
+          }
+        }
+
+        if !found {
+          inState[key] = append(inState[key], statement)
+        }
+      }
     }
   }
 

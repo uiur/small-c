@@ -63,9 +63,7 @@ func CompileSource(src string) (string, []error) {
 	}
 
 	irProgram := CompileIR(statements)
-	Optimize(irProgram)
-	fmt.Println(irProgram)
-	os.Exit(0)
+	irProgram = Optimize(irProgram)
 
 	code := Compile(irProgram)
 
