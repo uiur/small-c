@@ -4,7 +4,6 @@ import (
   // "github.com/k0kubun/pp"
 )
 
-
 type DataflowBlock struct {
   Name string
   Func *IRFunctionDefinition
@@ -54,42 +53,52 @@ func Optimize(program *IRProgram) *IRProgram {
     }
 
     buildDataflowGraph(blocks)
-
-    blockOut := make(map[*DataflowBlock]BlockState)
-
-    changed := true
-    for changed {
-      changed = false
-
-      for _, block := range blocks {
-        inState := analyzeBlock(blockOut, block)
-        if !inState.Equal(blockOut[block]) {
-          changed = true
-        }
-
-        blockOut[block] = inState
-      }
-    }
-
-    allStatementState := make(map[IRStatement]BlockState)
-    for _, block := range blocks {
-      inState := BlockState{}
-      for _, prevBlock := range block.Prev {
-        for key, value := range blockOut[prevBlock] {
-          inState[key] = append(inState[key], value...)
-        }
-      }
-
-      for _, statement := range statements {
-        inState = analyzeReachingDefinition(statement, inState)
-        allStatementState[statement] = inState
-      }
-    }
+    blockOut := searchReachingDefinitions(blocks)
+    allStatementState := reachingDefinitionsOfStatements(blocks, blockOut, statements)
 
     foldConstant(statements, allStatementState)
   }
 
 	return program
+}
+
+func searchReachingDefinitions(blocks []*DataflowBlock) map[*DataflowBlock]BlockState {
+  blockOut := make(map[*DataflowBlock]BlockState)
+
+  changed := true
+  for changed {
+    changed = false
+
+    for _, block := range blocks {
+      inState := analyzeBlock(blockOut, block)
+      if !inState.Equal(blockOut[block]) {
+        changed = true
+      }
+
+      blockOut[block] = inState
+    }
+  }
+
+  return blockOut
+}
+
+func reachingDefinitionsOfStatements(blocks []*DataflowBlock, blockOut map[*DataflowBlock]BlockState, statements []IRStatement) map[IRStatement]BlockState {
+  allStatementState := make(map[IRStatement]BlockState)
+  for _, block := range blocks {
+    inState := BlockState{}
+    for _, prevBlock := range block.Prev {
+      for key, value := range blockOut[prevBlock] {
+        inState[key] = append(inState[key], value...)
+      }
+    }
+
+    for _, statement := range statements {
+      inState = analyzeReachingDefinition(statement, inState)
+      allStatementState[statement] = inState
+    }
+  }
+
+  return allStatementState
 }
 
 func foldConstant(statements []IRStatement, allStatementState map[IRStatement]BlockState) {
@@ -101,7 +110,11 @@ func foldConstant(statements []IRStatement, allStatementState map[IRStatement]Bl
 func foldConstantStatement(statement IRStatement, allStatementState map[IRStatement]BlockState) (bool, int) {
   switch s := statement.(type) {
   case *IRAssignmentStatement:
-    return foldConstantExpression(s, s.Expression, allStatementState)
+    isConstant, value := foldConstantExpression(s, s.Expression, allStatementState)
+    if isConstant {
+      s.Expression = &IRNumberExpression{ Value: value }
+      return true, value
+    }
   }
 
   return false, 0
@@ -132,6 +145,59 @@ func foldConstantExpression(statement IRStatement, expression IRExpression, allS
     if rightIsConstant {
       e.Right = &IRNumberExpression{ Value: rightValue }
     }
+
+    if leftIsConstant && rightIsConstant {
+      switch e.Operator {
+      case "+":
+        return true, leftValue + rightValue
+
+      case "-":
+        return true, leftValue - rightValue
+
+      case "*":
+        return true, leftValue * rightValue
+
+      case "/":
+        return true, leftValue / rightValue
+
+      case "<":
+        value := 0
+        if leftValue < rightValue {
+          value = 1
+        }
+        return true, value
+      case ">":
+        value := 0
+        if leftValue > rightValue {
+          value = 1
+        }
+        return true, value
+
+      case "<=":
+        value := 0
+        if leftValue <= rightValue {
+          value = 1
+        }
+        return true, value
+
+      case ">=":
+        value := 0
+        if leftValue >= rightValue {
+          value = 1
+        }
+        return true, value
+
+      case "==":
+        value := 0
+        if leftValue == rightValue {
+          value = 1
+        }
+        return true, value
+      }
+
+      panic("unexpected operator: " + e.Operator)
+    }
+
 
     return false, 0
   }
@@ -263,32 +329,6 @@ func findBlockByLabel(blocks []*DataflowBlock, label string) *DataflowBlock {
   }
 
   return nil
-}
-
-func findBlockByFuncName(blocks []*DataflowBlock, name string) *DataflowBlock {
-  for _, block := range blocks {
-    inStatement := block.Statements[0]
-    funcStatement, ok := inStatement.(*IRFunctionDefinition)
-    if ok && funcStatement.Var.Name == name {
-      return block
-    }
-  }
-
-  return nil
-}
-
-func findCallBlocks(blocks []*DataflowBlock, funcName string) []*DataflowBlock {
-  var result []*DataflowBlock
-  for i, block := range blocks {
-    outStatement := block.Statements[len(block.Statements)-1]
-
-    callStatement, ok := outStatement.(*IRCallStatement)
-    if ok && callStatement.Func.Name == funcName {
-      result = append(result, blocks[i+1])
-    }
-  }
-
-  return result
 }
 
 func irStatements(program *IRProgram) []IRStatement {
