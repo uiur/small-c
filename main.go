@@ -63,6 +63,10 @@ func CompileSource(src string) (string, []error) {
 	}
 
 	irProgram := CompileIR(statements)
+	Optimize(irProgram)
+	fmt.Println(irProgram)
+	os.Exit(0)
+
 	code := Compile(irProgram)
 
 	if debug {

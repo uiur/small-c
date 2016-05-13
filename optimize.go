@@ -1,7 +1,7 @@
 package main
 
 import (
-  "github.com/k0kubun/pp"
+  // "github.com/k0kubun/pp"
 )
 
 
@@ -10,39 +10,36 @@ type DataflowBlock struct {
   Func *IRFunctionDefinition
 	Statements []IRStatement
 	Next       []*DataflowBlock
+  Prev       []*DataflowBlock
+}
+
+func (block *DataflowBlock) AddEdge(another *DataflowBlock) {
+  block.Next = append(block.Next, another)
+  another.Prev = append(another.Prev, block)
+}
+
+type BlockState map[*Symbol][]IRStatement
+
+func (state BlockState) Equal(anotherState BlockState) bool {
+  for symbol, statements := range state {
+    if len(state[symbol]) != len(anotherState[symbol]) {
+      return false
+    }
+
+    for i := range statements {
+      if state[symbol][i] != anotherState[symbol][i] {
+        return false
+      }
+    }
+  }
+
+  return true
 }
 
 func Optimize(program *IRProgram) *IRProgram {
   for _, f := range program.Functions {
     statements := flatStatement(f)
-
-  	var blocks []*DataflowBlock
-
-  	block := &DataflowBlock{}
-  	for _, statement := range statements {
-  		switch s := statement.(type) {
-  		case *IRFunctionDefinition, *IRLabelStatement:
-  			// in
-        if len(block.Statements) > 0 {
-    			blocks = append(blocks, block)
-        }
-
-  			block = &DataflowBlock{Statements: []IRStatement{s}}
-
-  		case *IRIfStatement, *IRGotoStatement, *IRReturnStatement:
-  			// out
-  			block.Statements = append(block.Statements, s)
-  			blocks = append(blocks, block)
-        block = &DataflowBlock{}
-
-  		default:
-  			block.Statements = append(block.Statements, s)
-  		}
-  	}
-
-    if len(block.Statements) > 0 {
-      blocks = append(blocks, block)
-    }
+    blocks := splitStatemetsIntoBlocks(statements)
 
     // add info of function definition
     var definition *IRFunctionDefinition
@@ -56,45 +53,204 @@ func Optimize(program *IRProgram) *IRProgram {
       block.Func = definition
     }
 
-    beginBlock := &DataflowBlock{Name: "BEGIN"}
-    beginBlock.Next = append(beginBlock.Next, blocks[0])
+    buildDataflowGraph(blocks)
 
-    endBlock := &DataflowBlock{Name: "END"}
-    lastBlock := blocks[len(blocks)-1]
-    lastBlock.Next = append(lastBlock.Next, endBlock)
+    blockOut := make(map[*DataflowBlock]BlockState)
 
-    // add edge
-    for _, block := range blocks {
-      jumpStatement := block.Statements[len(block.Statements)-1]
-      switch s := jumpStatement.(type) {
-      case *IRGotoStatement:
-        // goto label -> label block
-        nextBlock := findBlockByLabel(blocks, s.Label)
-        block.Next = append(block.Next, nextBlock)
+    changed := true
+    for changed {
+      changed = false
 
-      case *IRIfStatement:
-        // if block -> true_label block, false_label block
-        if len(s.TrueLabel) > 0 {
-          trueLabelBlock := findBlockByLabel(blocks, s.TrueLabel)
-          block.Next = append(block.Next, trueLabelBlock)
+      for _, block := range blocks {
+        inState := analyzeBlock(blockOut, block)
+        if !inState.Equal(blockOut[block]) {
+          changed = true
         }
 
-        if len(s.FalseLabel) > 0 {
-          falseLabelBlock := findBlockByLabel(blocks, s.FalseLabel)
-          block.Next = append(block.Next, falseLabelBlock)
-        }
-
-      case *IRReturnStatement:
-        // return block -> end block
-        block.Next = append(block.Next, endBlock)
-
+        blockOut[block] = inState
       }
     }
 
-  	pp.Println(beginBlock)
+    allStatementState := make(map[IRStatement]BlockState)
+    for _, block := range blocks {
+      inState := BlockState{}
+      for _, prevBlock := range block.Prev {
+        for key, value := range blockOut[prevBlock] {
+          inState[key] = append(inState[key], value...)
+        }
+      }
+
+      for _, statement := range statements {
+        inState = analyzeReachingDefinition(statement, inState)
+        allStatementState[statement] = inState
+      }
+    }
+
+    foldConstant(statements, allStatementState)
   }
 
 	return program
+}
+
+func foldConstant(statements []IRStatement, allStatementState map[IRStatement]BlockState) {
+  for _, statement := range statements {
+    foldConstantStatement(statement, allStatementState)
+  }
+}
+
+func foldConstantStatement(statement IRStatement, allStatementState map[IRStatement]BlockState) (bool, int) {
+  switch s := statement.(type) {
+  case *IRAssignmentStatement:
+    return foldConstantExpression(s, s.Expression, allStatementState)
+  }
+
+  return false, 0
+}
+
+func foldConstantExpression(statement IRStatement, expression IRExpression, allStatementState map[IRStatement]BlockState) (bool, int) {
+  switch e := expression.(type) {
+  case *IRNumberExpression:
+    return true, e.Value
+
+  case *IRVariableExpression:
+    symbol := e.Var
+    definitionOfVar := allStatementState[statement][symbol]
+    if len(definitionOfVar) == 1 {
+      return foldConstantStatement(definitionOfVar[0], allStatementState)
+    }
+
+    return false, 0
+
+  case *IRBinaryExpression:
+    leftIsConstant, leftValue := foldConstantExpression(statement, e.Left, allStatementState)
+    rightIsConstant, rightValue := foldConstantExpression(statement, e.Right, allStatementState)
+
+    if leftIsConstant {
+      e.Left = &IRNumberExpression{ Value: leftValue }
+    }
+
+    if rightIsConstant {
+      e.Right = &IRNumberExpression{ Value: rightValue }
+    }
+
+    return false, 0
+  }
+
+  return false, 0
+}
+
+func analyzeBlock(blockOut map[*DataflowBlock]BlockState, block *DataflowBlock) BlockState {
+  inState := BlockState{}
+  for _, prevBlock := range block.Prev {
+    for key, value := range blockOut[prevBlock] {
+      inState[key] = append(inState[key], value...)
+    }
+  }
+
+  for _, statement := range block.Statements {
+    inState = analyzeReachingDefinition(statement, inState)
+  }
+
+  return inState
+}
+
+func analyzeReachingDefinition(statement IRStatement, inState BlockState) BlockState {
+  switch s := statement.(type) {
+  case *IRAssignmentStatement:
+    inState[s.Var] = []IRStatement{s}
+
+  case *IRWriteStatement:
+    inState[s.Dest] = []IRStatement{s}
+
+  case *IRReadStatement:
+    inState[s.Dest] = []IRStatement{s}
+
+  case *IRCallStatement:
+    inState[s.Dest] = []IRStatement{s}
+  }
+
+  return inState
+}
+
+func splitStatemetsIntoBlocks(statements []IRStatement) []*DataflowBlock {
+	var blocks []*DataflowBlock
+	block := &DataflowBlock{}
+	for _, statement := range statements {
+		switch s := statement.(type) {
+		case *IRFunctionDefinition, *IRLabelStatement:
+			// in
+      if len(block.Statements) > 0 {
+  			blocks = append(blocks, block)
+      }
+
+			block = &DataflowBlock{Statements: []IRStatement{s}}
+
+		case *IRIfStatement, *IRGotoStatement, *IRReturnStatement:
+			// out
+			block.Statements = append(block.Statements, s)
+			blocks = append(blocks, block)
+      block = &DataflowBlock{}
+
+		default:
+			block.Statements = append(block.Statements, s)
+		}
+	}
+
+  if len(block.Statements) > 0 {
+    blocks = append(blocks, block)
+  }
+
+  return blocks
+}
+
+func buildDataflowGraph(blocks []*DataflowBlock) *DataflowBlock {
+  beginBlock := &DataflowBlock{Name: "BEGIN"}
+  beginBlock.Next = append(beginBlock.Next, blocks[0])
+
+  endBlock := &DataflowBlock{Name: "END"}
+  lastBlock := blocks[len(blocks)-1]
+  lastBlock.Next = append(lastBlock.Next, endBlock)
+
+  for i, block := range blocks {
+    lastStatement := block.Statements[len(block.Statements)-1]
+    switch s := lastStatement.(type) {
+    case *IRGotoStatement:
+      // goto label -> label block
+      nextBlock := findBlockByLabel(blocks, s.Label)
+      block.AddEdge(nextBlock)
+
+    case *IRIfStatement:
+      // if block -> true_label block, false_label block
+      if len(s.TrueLabel) > 0 {
+        trueLabelBlock := findBlockByLabel(blocks, s.TrueLabel)
+        block.AddEdge(trueLabelBlock)
+      }
+
+      if len(s.FalseLabel) > 0 {
+        falseLabelBlock := findBlockByLabel(blocks, s.FalseLabel)
+        block.AddEdge(falseLabelBlock)
+      }
+
+      if len(s.TrueLabel) == 0 || len(s.FalseLabel) == 0 {
+        if i < len(blocks) - 1 {
+          nextBlock := blocks[i+1]
+          block.AddEdge(nextBlock)
+        }
+      }
+
+    case *IRReturnStatement:
+      // return block -> end block
+      block.AddEdge(endBlock)
+
+    default:
+      if i < len(blocks) - 1 {
+        nextBlock := blocks[i+1]
+        block.AddEdge(nextBlock)
+      }
+    }
+  }
+
+  return beginBlock
 }
 
 func findBlockByLabel(blocks []*DataflowBlock, label string) *DataflowBlock {

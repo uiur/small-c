@@ -481,8 +481,6 @@ func compileIRStatement(statement Statement) IRStatement {
     pp.Println(s)
     panic("unexpected statement")
   }
-
-  return nil
 }
 
 func IRVariableDeclarations(symbols []*Symbol) []*IRVariableDeclaration {
