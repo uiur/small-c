@@ -33,7 +33,7 @@ func (state BlockState) Equal(anotherState BlockState) bool {
 }
 
 func Optimize(program *IRProgram) *IRProgram {
-  for _, f := range program.Functions {
+  for i, f := range program.Functions {
     statements := flatStatement(f)
     blocks := splitStatemetsIntoBlocks(statements)
 
@@ -53,7 +53,14 @@ func Optimize(program *IRProgram) *IRProgram {
     searchReachingDefinitions(blocks)
     blockOut := searchReachingDefinitions(blocks)
     allStatementState := reachingDefinitionsOfStatements(blocks, blockOut, statements)
-    foldConstant(statements, allStatementState)
+
+    traversed := Traverse(f, func (statement IRStatement) IRStatement {
+      foldConstantStatement(statement, allStatementState)
+      return statement
+    })
+
+    f = traversed.(*IRFunctionDefinition)
+    program.Functions[i] = f
   }
 
 	return program
@@ -71,7 +78,6 @@ func searchReachingDefinitions(blocks []*DataflowBlock) map[*DataflowBlock]Block
       if !inState.Equal(blockOut[block]) {
         changed = true
       }
-
 
       blockOut[block] = inState
     }
@@ -97,12 +103,6 @@ func reachingDefinitionsOfStatements(blocks []*DataflowBlock, blockOut map[*Data
   }
 
   return allStatementState
-}
-
-func foldConstant(statements []IRStatement, allStatementState map[IRStatement]BlockState) {
-  for _, statement := range statements {
-    foldConstantStatement(statement, allStatementState)
-  }
 }
 
 func foldConstantStatement(statement IRStatement, allStatementState map[IRStatement]BlockState) (bool, int) {
@@ -339,15 +339,6 @@ func findBlockByLabel(blocks []*DataflowBlock, label string) *DataflowBlock {
   }
 
   return nil
-}
-
-func irStatements(program *IRProgram) []IRStatement {
-	var statements []IRStatement
-	for _, f := range program.Functions {
-		statements = append(statements, flatStatement(f)...)
-	}
-
-	return statements
 }
 
 func flatStatement(statement IRStatement) []IRStatement {

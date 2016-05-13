@@ -13,6 +13,40 @@ type IRProgram struct {
   Functions []*IRFunctionDefinition
 }
 
+type traverseAction (func(statement IRStatement) IRStatement)
+
+func Traverse(statement IRStatement, action traverseAction) IRStatement {
+  switch s := statement.(type) {
+  case *IRFunctionDefinition:
+    body := Traverse(s.Body, action)
+    if body != nil {
+      s.Body = body
+      return s
+    }
+
+    return nil
+
+  case *IRCompoundStatement:
+    for i, statement := range s.Statements {
+      transformed := Traverse(statement, action)
+      if transformed != nil {
+        s.Statements[i] = transformed
+      } else {
+        if i < len(s.Statements) {
+          s.Statements = append(s.Statements[0:i], s.Statements[i+1:]...)
+        } else {
+          s.Statements = s.Statements[0:i]
+        }
+      }
+    }
+
+    return s
+
+  default:
+    return action(statement)
+  }
+}
+
 func (s *IRProgram) String() string {
   var declStrs []string
   for _, decl := range s.Declarations {
