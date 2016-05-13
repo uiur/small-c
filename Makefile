@@ -1,6 +1,6 @@
-all: deps build
+all: exec
 
-build: parser.go
+exec: deps parser.go
 	go build
 
 deps:
@@ -11,6 +11,13 @@ parser.go: parser.go.y
 
 test: parser.go
 	go test -cover ./...
+
+examples := $(wildcard example/*.sc)
+destfiles := $(patsubst example/%.sc,example/%.s,$(examples))
+example: $(destfiles)
+
+example/%.s: example/%.sc exec
+	./small-c $< > $@
 
 report: report/1.pdf report/2.pdf
 

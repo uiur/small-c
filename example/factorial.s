@@ -1,3 +1,4 @@
+.data
 .text
 .globl main
 
@@ -8,7 +9,11 @@ sw $fp, 0($sp)
 addi $fp, $sp, 24
 sw $a0, 0($fp)
 lw $t1, 0($fp)
+addi $sp, $sp, -4
+sw $t1, 0($sp)
 li $t2, 1
+lw $t1, 0($sp)
+addi $sp, $sp, 4
 beq $t1, $t2, beq_true_0
 li $t0, 0
 j beq_end_0
@@ -21,21 +26,31 @@ beq $t0, $zero, ir_if_false_0
 j true_0
 ir_if_false_0:
 j false_0
+ir_if_end_0:
 true_0:
 li $t0, 1
 sw $t0, -8($fp)
 lw $v0, -8($fp)
 j fact_exit
+j end_0
 false_0:
 lw $t1, 0($fp)
+addi $sp, $sp, -4
+sw $t1, 0($sp)
 li $t2, 1
+lw $t1, 0($sp)
+addi $sp, $sp, 4
 sub $t0, $t1, $t2
 sw $t0, -12($fp)
 lw $a0, -12($fp)
 jal fact
 sw $v0, -16($fp)
 lw $t1, 0($fp)
+addi $sp, $sp, -4
+sw $t1, 0($sp)
 lw $t2, -16($fp)
+lw $t1, 0($sp)
+addi $sp, $sp, 4
 mul $t0, $t1, $t2
 sw $t0, -8($fp)
 lw $v0, -8($fp)
