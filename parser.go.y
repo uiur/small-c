@@ -2,10 +2,8 @@
 package main
 
 import (
-    "os"
     "go/scanner"
     "go/token"
-    "fmt"
     "strconv"
 )
 
@@ -357,10 +355,6 @@ func identToNumber(lit string) int {
 func (l *Lexer) Lex(lval *yySymType) int {
   pos, tok, lit := l.Scan()
   token_number := int(tok)
-
-  if len(os.Getenv("DEBUG")) > 0 {
-    fmt.Println(tok, lit)
-  }
 
   if tokenMap[tok] > 0 {
     return tokenMap[tok]

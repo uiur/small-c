@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	"io/ioutil"
@@ -9,11 +10,15 @@ import (
 	"github.com/k0kubun/pp"
 )
 
+
 func main() {
+	optimize := flag.Bool("optimize", true, "Enable optimization")
+	flag.Parse()
+
 	var src string
 
 	if len(os.Args) > 1 {
-		filename := os.Args[1]
+		filename := os.Args[len(os.Args) - 1]
 		data, err := ioutil.ReadFile(filename)
 		if err != nil {
 			fmt.Println(err)
@@ -25,14 +30,14 @@ func main() {
 		src = string(data)
 	}
 
-	code, errs := CompileSource(src)
+	code, errs := CompileSource(src, *optimize)
 	if len(errs) > 0 {
 		Exit(src, errs)
 	}
 	fmt.Println(code)
 }
 
-func CompileSource(src string) (string, []error) {
+func CompileSource(src string, optimize bool) (string, []error) {
 	debug := len(os.Getenv("DEBUG")) > 0
 
 	statements, err := Parse(src)
@@ -63,7 +68,10 @@ func CompileSource(src string) (string, []error) {
 	}
 
 	irProgram := CompileIR(statements)
-	irProgram = Optimize(irProgram)
+
+	if optimize {
+		irProgram = Optimize(irProgram)
+	}
 
 	code := Compile(irProgram)
 
