@@ -37,6 +37,7 @@ type IRExpression interface {
 type IRVariableDeclaration struct {
   Var *Symbol
 }
+
 func (s *IRVariableDeclaration) String() string {
   return fmt.Sprintf("%v %v", s.Var.Type, s.Var.Name)
 }
