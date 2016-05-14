@@ -27,18 +27,15 @@ func Traverse(statement IRStatement, action traverseAction) IRStatement {
     return nil
 
   case *IRCompoundStatement:
-    for i, statement := range s.Statements {
+    statements := []IRStatement{}
+    for _, statement := range s.Statements {
       transformed := Traverse(statement, action)
       if transformed != nil {
-        s.Statements[i] = transformed
-      } else {
-        if i < len(s.Statements) {
-          s.Statements = append(s.Statements[0:i], s.Statements[i+1:]...)
-        } else {
-          s.Statements = s.Statements[0:i]
-        }
+        statements = append(statements, transformed)
       }
     }
+
+    s.Statements = statements
 
     return s
 

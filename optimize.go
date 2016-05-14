@@ -1,6 +1,5 @@
 package main
 
-
 type DataflowBlock struct {
   Name string
   Func *IRFunctionDefinition
@@ -59,11 +58,94 @@ func Optimize(program *IRProgram) *IRProgram {
       return statement
     })
 
-    f = traversed.(*IRFunctionDefinition)
-    program.Functions[i] = f
+    program.Functions[i] = traversed.(*IRFunctionDefinition)
+
+    used := make(map[IRStatement]bool)
+    markAsUsed := func(s IRStatement, symbol *Symbol) {
+      for _, definition := range allStatementState[s][symbol] {
+        used[definition] = true
+      }
+    }
+
+    Traverse(f, func (statement IRStatement) IRStatement {
+      switch s := statement.(type) {
+      case *IRCompoundStatement:
+        used[s] = true
+
+      case *IRAssignmentStatement:
+        vars := extractVarsFromExpression(s.Expression)
+        for _, v := range vars {
+          markAsUsed(s, v)
+        }
+
+      case *IRReadStatement:
+        markAsUsed(s, s.Src)
+
+      case *IRWriteStatement:
+        markAsUsed(s, s.Src)
+        markAsUsed(s, s.Dest)
+
+      case *IRCallStatement:
+        for _, argVar := range s.Vars {
+          markAsUsed(s, argVar)
+        }
+
+      case *IRPrintStatement:
+        markAsUsed(s, s.Var)
+
+      case *IRReturnStatement:
+        markAsUsed(s, s.Var)
+
+      case *IRIfStatement:
+        markAsUsed(s, s.Var)
+      }
+
+      return statement
+    })
+
+    changed := true
+    for changed {
+      changed = false
+
+      transformed := Traverse(program.Functions[i], func (statement IRStatement) IRStatement {
+        switch statement.(type) {
+        case *IRAssignmentStatement, *IRReadStatement:
+          if !used[statement] {
+            changed = true
+            return nil
+          }
+        }
+
+        return statement
+      })
+
+      program.Functions[i] = transformed.(*IRFunctionDefinition)
+    }
   }
 
 	return program
+}
+
+func extractVarsFromExpression(expression IRExpression) []*Symbol {
+  switch e := expression.(type) {
+  case *IRNumberExpression:
+    return nil
+
+  case *IRVariableExpression:
+    return []*Symbol{e.Var}
+
+  case *IRBinaryExpression:
+    var vars []*Symbol
+    vars = append(vars, extractVarsFromExpression(e.Left)...)
+    vars = append(vars, extractVarsFromExpression(e.Right)...)
+    return vars
+
+  case *IRAddressExpression:
+    return []*Symbol{e.Var}
+
+  }
+
+  return nil
 }
 
 func searchReachingDefinitions(blocks []*DataflowBlock) map[*DataflowBlock]BlockState {
@@ -89,14 +171,9 @@ func searchReachingDefinitions(blocks []*DataflowBlock) map[*DataflowBlock]Block
 func reachingDefinitionsOfStatements(blocks []*DataflowBlock, blockOut map[*DataflowBlock]BlockState, statements []IRStatement) map[IRStatement]BlockState {
   allStatementState := make(map[IRStatement]BlockState)
   for _, block := range blocks {
-    inState := BlockState{}
-    for _, prevBlock := range block.Prev {
-      for key, value := range blockOut[prevBlock] {
-        inState[key] = append(inState[key], value...)
-      }
-    }
+    inState := blockIn(blockOut, block)
 
-    for _, statement := range statements {
+    for _, statement := range block.Statements {
       allStatementState[statement] = inState
       inState = analyzeReachingDefinition(statement, inState)
     }
@@ -203,7 +280,7 @@ func foldConstantExpression(statement IRStatement, expression IRExpression, allS
   return false, 0
 }
 
-func analyzeBlock(blockOut map[*DataflowBlock]BlockState, block *DataflowBlock) BlockState {
+func blockIn(blockOut map[*DataflowBlock]BlockState, block *DataflowBlock) BlockState {
   inState := BlockState{}
   for _, prevBlock := range block.Prev {
     for key, statements := range blockOut[prevBlock] {
@@ -223,6 +300,11 @@ func analyzeBlock(blockOut map[*DataflowBlock]BlockState, block *DataflowBlock) 
     }
   }
 
+  return inState
+}
+
+func analyzeBlock(blockOut map[*DataflowBlock]BlockState, block *DataflowBlock) BlockState {
+  inState := blockIn(blockOut, block)
   for _, statement := range block.Statements {
     inState = analyzeReachingDefinition(statement, inState)
   }
@@ -235,11 +317,13 @@ func analyzeReachingDefinition(statement IRStatement, inState BlockState) BlockS
   case *IRAssignmentStatement:
     inState[s.Var] = []IRStatement{s}
 
-  case *IRWriteStatement:
-    inState[s.Dest] = []IRStatement{s}
-
   case *IRReadStatement:
     inState[s.Dest] = []IRStatement{s}
+
+  case *IRWriteStatement:
+    for symbol := range inState {
+      inState[symbol] = append(inState[symbol], s)
+    }
 
   case *IRCallStatement:
     inState[s.Dest] = []IRStatement{s}

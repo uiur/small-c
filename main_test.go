@@ -20,7 +20,7 @@ func TestCompileExample(t *testing.T) {
       return
     }
 
-    code, errs := CompileSource(string(src))
+    code, errs := CompileSource(string(src), true)
     for _, err := range errs {
       t.Error(err)
     }
