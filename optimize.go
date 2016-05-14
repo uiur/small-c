@@ -2,7 +2,6 @@ package main
 
 type DataflowBlock struct {
   Name string
-  Func *IRFunctionDefinition
 	Statements []IRStatement
 	Next       []*DataflowBlock
   Prev       []*DataflowBlock
@@ -36,29 +35,31 @@ func Optimize(program *IRProgram) *IRProgram {
     statements := flatStatement(f)
     blocks := splitStatemetsIntoBlocks(statements)
 
-    // add info of function definition
-    var definition *IRFunctionDefinition
-    for _, block := range blocks {
-      first := block.Statements[0]
-      d, ok := first.(*IRFunctionDefinition)
-      if ok {
-        definition = d
-      }
-
-      block.Func = definition
-    }
-
     buildDataflowGraph(blocks)
     searchReachingDefinitions(blocks)
     blockOut := searchReachingDefinitions(blocks)
     allStatementState := reachingDefinitionsOfStatements(blocks, blockOut, statements)
 
-    traversed := Traverse(f, func (statement IRStatement) IRStatement {
-      foldConstantStatement(statement, allStatementState)
-      return statement
-    })
+    program.Functions[i] = transformByConstantFolding(program.Functions[i], allStatementState)
+    program.Functions[i] = transformByDeadCodeElimination(program.Functions[i], allStatementState)
+  }
 
-    program.Functions[i] = traversed.(*IRFunctionDefinition)
+	return program
+}
+
+func transformByConstantFolding(f *IRFunctionDefinition, allStatementState map[IRStatement]BlockState) *IRFunctionDefinition {
+  traversed := Traverse(f, func (statement IRStatement) IRStatement {
+    foldConstantStatement(statement, allStatementState)
+    return statement
+  })
+
+  return traversed.(*IRFunctionDefinition)
+}
+
+func transformByDeadCodeElimination(f *IRFunctionDefinition, allStatementState map[IRStatement]BlockState) *IRFunctionDefinition {
+  changed := true
+  for changed {
+    changed = false
 
     used := make(map[IRStatement]bool)
     markAsUsed := func(s IRStatement, symbol *Symbol) {
@@ -103,27 +104,58 @@ func Optimize(program *IRProgram) *IRProgram {
       return statement
     })
 
-    changed := true
-    for changed {
-      changed = false
-
-      transformed := Traverse(program.Functions[i], func (statement IRStatement) IRStatement {
-        switch statement.(type) {
-        case *IRAssignmentStatement, *IRReadStatement:
-          if !used[statement] {
-            changed = true
-            return nil
-          }
+    transformed := Traverse(f, func (statement IRStatement) IRStatement {
+      switch statement.(type) {
+      case *IRAssignmentStatement, *IRReadStatement:
+        if !used[statement] {
+          changed = true
+          return nil
         }
+      }
 
-        return statement
-      })
+      return statement
+    })
 
-      program.Functions[i] = transformed.(*IRFunctionDefinition)
-    }
+    f = transformed.(*IRFunctionDefinition)
   }
 
-	return program
+  return removeUnusedVariableDeclaration(f)
+}
+
+func removeUnusedVariableDeclaration(f *IRFunctionDefinition) *IRFunctionDefinition {
+  used := make(map[*Symbol]bool)
+  Traverse(f, func (statement IRStatement) IRStatement {
+    switch s := statement.(type) {
+    case *IRAssignmentStatement:
+      used[s.Var] = true
+    case *IRReadStatement:
+      used[s.Dest] = true
+    case *IRCallStatement:
+      used[s.Dest] = true
+    }
+
+    return statement
+  })
+
+  transformed := Traverse(f, func (statement IRStatement) IRStatement {
+    switch s := statement.(type) {
+    case *IRCompoundStatement:
+      newDeclarations := []*IRVariableDeclaration{}
+      for _, d := range s.Declarations {
+        _, isArrayType := d.Var.Type.(ArrayType)
+        if used[d.Var] || isArrayType {
+          newDeclarations = append(newDeclarations, d)
+        }
+      }
+
+      s.Declarations = newDeclarations
+      return s
+    }
+
+    return statement
+  })
+
+  return transformed.(*IRFunctionDefinition)
 }
 
 func extractVarsFromExpression(expression IRExpression) []*Symbol {

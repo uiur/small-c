@@ -37,7 +37,7 @@ func Traverse(statement IRStatement, action traverseAction) IRStatement {
 
     s.Statements = statements
 
-    return s
+    return action(s)
 
   default:
     return action(statement)
