@@ -14,26 +14,26 @@ sw $t1, 0($sp)
 li $t2, 1
 lw $t1, 0($sp)
 addi $sp, $sp, 4
-beq $t1, $t2, beq_true_0
+beq $t1, $t2, beq_true_1
 li $t0, 0
-j beq_end_0
-beq_true_0:
+j beq_end_1
+beq_true_1:
 li $t0, 1
-beq_end_0:
+beq_end_1:
 sw $t0, -4($fp)
 lw $t0, -4($fp)
-beq $t0, $zero, ir_if_false_0
-j true_0
-ir_if_false_0:
-j false_0
-ir_if_end_0:
-true_0:
+beq $t0, $zero, ir_if_false_1
+j true_3
+ir_if_false_1:
+j false_3
+ir_if_end_1:
+true_3:
 li $t0, 1
 sw $t0, -8($fp)
 lw $v0, -8($fp)
 j fact_exit
-j end_0
-false_0:
+j end_3
+false_3:
 lw $t1, 0($fp)
 addi $sp, $sp, -4
 sw $t1, 0($sp)
@@ -55,7 +55,7 @@ mul $t0, $t1, $t2
 sw $t0, -8($fp)
 lw $v0, -8($fp)
 j fact_exit
-end_0:
+end_3:
 fact_exit:
 lw $fp, 0($sp)
 lw $ra, 4($sp)
@@ -82,4 +82,3 @@ lw $fp, 0($sp)
 lw $ra, 4($sp)
 addi $sp, $sp, 20
 jr $ra
-

@@ -2,31 +2,76 @@ package main
 
 import (
 	"io/ioutil"
-	"path/filepath"
+	"os/exec"
+	"regexp"
+	"strings"
 	"testing"
 )
 
-func TestCompileExample(t *testing.T) {
-	files, err := filepath.Glob("example/*.sc")
+func TestSimulateExample(t *testing.T) {
+	examples := [](struct {
+		Filename string
+		Output string
+	}){
+		{"example/sum.sc", "1"},
+		{"example/sum_for.sc", "45"},
+		{"example/many_args.sc", "6"},
+		{"example/factorial.sc", "24"},
+		{"example/fib.sc", "89"},
+		{"example/global_var.sc", "11"},
+		{"example/if_test.sc", ""},
+		{"example/pointer_test.sc", ""},
+		{"example/optimize_constant.sc", "1"},
+		{"example/bubble_sort.sc", "12345678"},
+		{"example/quick_sort.sc", "12345678"},
+	}
+
+	for _, example := range examples {
+		sourceFilename := example.Filename
+		filename := regexp.MustCompile("\\.sc$").ReplaceAllString(sourceFilename, ".s")
+
+		{
+			err := compileAndSave(sourceFilename)
+
+			if err != nil {
+				t.Error(err)
+				continue
+			}
+		}
+
+		byteOut, err := exec.Command("spim", "-file", filename).Output()
+
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		lines := strings.Split(string(byteOut), "\n")
+		output := lines[len(lines)-1]
+		expected := example.Output
+
+		if output != expected {
+			t.Errorf("expect `%v`'s output to be `%v`, got `%v`", filename, expected, output)
+		}
+	}
+}
+
+func compileAndSave(filename string) error {
+	src, err := ioutil.ReadFile(filename)
+  if err != nil {
+    return err
+  }
+
+  code, errs := CompileSource(string(src), true)
+  for _, err := range errs {
+		return err
+  }
+
+	dest := regexp.MustCompile("\\.sc$").ReplaceAllString(filename, ".s")
+	err = ioutil.WriteFile(dest, []byte(code), 0777)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	for _, file := range files {
-  	src, err := ioutil.ReadFile(file)
-
-    if err != nil {
-      t.Error(err)
-      return
-    }
-
-    code, errs := CompileSource(string(src), true)
-    for _, err := range errs {
-      t.Error(err)
-    }
-
-    if len(code) == 0 {
-      t.Error("expect code to be present")
-    }
-	}
+	return nil
 }

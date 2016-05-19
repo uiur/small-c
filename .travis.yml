@@ -2,3 +2,13 @@ language: go
 
 go:
   - 1.6
+
+before_install:
+  - wget https://github.com/ymyzk/spim-for-kuis/archive/master.zip
+  - unzip master.zip
+  - cd ./spim-for-kuis-master/spim/
+  - sudo make DEST_DIR=/usr spim install
+  - cd ../../
+  - make deps
+
+script: make test

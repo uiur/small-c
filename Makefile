@@ -10,7 +10,7 @@ parser.go: parser.go.y
 	go tool yacc -o parser.go parser.go.y
 
 test: parser.go
-	go test -cover ./...
+	go test -v -cover ./...
 
 examples := $(wildcard example/*.sc)
 destfiles := $(patsubst example/%.sc,example/%.s,$(examples))
