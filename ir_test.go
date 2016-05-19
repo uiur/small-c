@@ -2,8 +2,6 @@ package main
 
 import (
 	"testing"
-
-	"github.com/k0kubun/pp"
 )
 
 func TestCompileIR(t *testing.T) {
@@ -146,9 +144,8 @@ func TestCompileIRExpression(t *testing.T) {
 		Right:    &NumberExpression{Value: "1"},
 	}
 
-	ir, decls, before := compileIRExpression(e)
+	_, decls, before := compileIRExpression(e)
 	if len(before) == 0 || len(decls) == 0 {
 		t.Errorf("expect decls and statements, got %v %v", before, decls)
 	}
-	pp.Println(ir, decls, before)
 }
