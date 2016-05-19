@@ -32,7 +32,7 @@ import (
 %type<declarator> declarator
 %type<declarators> declarators
 %type<parameter_declaration> parameter_declaration
-%token<token> NUMBER IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE FOR '-' '*' '&' '{'
+%token<token> NUMBER CHAR IDENT TYPE IF LOGICAL_OR LOGICAL_AND RETURN EQL NEQ GEQ LEQ ELSE WHILE FOR '-' '*' '&' '{'
 
 %%
 
@@ -311,6 +311,14 @@ primary_expression
   {
     $$ = $2
   }
+  | CHAR
+  {
+    literal := $1.lit
+    ch := literal[1:len(literal)-1][0]
+    i := int(ch)
+
+    $$ = &NumberExpression{ pos: $1.pos, Value: strconv.Itoa(i) }
+  }
 
 identifier
   : IDENT
@@ -365,6 +373,8 @@ func (l *Lexer) Lex(lval *yySymType) int {
     return -1
   case token.INT:
     token_number = NUMBER
+  case token.CHAR:
+    token_number = CHAR
   case token.ADD, token.SUB, token.MUL, token.QUO, token.AND,
     token.COMMA, token.SEMICOLON,
     token.ASSIGN,
