@@ -3,5 +3,5 @@ int sum(int a, int b) {
 }
 
 int main() {
-  print(sum(100, 20));
+  print(sum(100, 20) == 120);
 }

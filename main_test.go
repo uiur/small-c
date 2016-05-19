@@ -3,43 +3,25 @@ package main
 import (
 	"io/ioutil"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
 )
-
-func TestCompileExample(t *testing.T) {
-	files, err := filepath.Glob("example/*.sc")
-	if err != nil {
-		panic(err)
-	}
-
-	for _, file := range files {
-  	src, err := ioutil.ReadFile(file)
-
-    if err != nil {
-      t.Error(err)
-      return
-    }
-
-    code, errs := CompileSource(string(src), true)
-    for _, err := range errs {
-      t.Error(err)
-    }
-
-    if len(code) == 0 {
-      t.Error("expect code to be present")
-    }
-	}
-}
 
 func TestSimulateExample(t *testing.T) {
 	examples := [](struct {
 		Filename string
 		Output string
 	}){
-		{"example/sum.sc", "120"},
+		{"example/sum.sc", "1"},
+		{"example/sum_for.sc", "45"},
+		{"example/many_args.sc", "6"},
+		{"example/factorial.sc", "24"},
+		{"example/fib.sc", "89"},
+		{"example/global_var.sc", "11"},
+		{"example/if_test.sc", ""},
+		{"example/pointer_test.sc", ""},
+		{"example/optimize_constant.sc", "1"},
 		{"example/bubble_sort.sc", "12345678"},
 		{"example/quick_sort.sc", "12345678"},
 	}
