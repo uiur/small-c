@@ -113,7 +113,7 @@ func TestTypeOfPointerExpression(t *testing.T) {
 
 func TestCheckTypeOfIfStatement(t *testing.T) {
 	{
-    statements := ast(`
+		statements := ast(`
       int main() {
         int a;
         int b;
@@ -130,8 +130,8 @@ func TestCheckTypeOfIfStatement(t *testing.T) {
 		}
 	}
 
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int main() {
         int a;
         int *b;
@@ -146,12 +146,12 @@ func TestCheckTypeOfIfStatement(t *testing.T) {
 		if err == nil {
 			t.Error("expect error, but nil")
 		}
-  }
+	}
 }
 
 func TestCheckTypeOfWhileStatement(t *testing.T) {
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int main() {
         int i;
         while (i > 0) {
@@ -164,10 +164,10 @@ func TestCheckTypeOfWhileStatement(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-  }
+	}
 
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int main() {
         int **i;
         while (i > 0) {
@@ -180,12 +180,12 @@ func TestCheckTypeOfWhileStatement(t *testing.T) {
 		if err == nil {
 			t.Error("expect type error in condition, got nil")
 		}
-  }
+	}
 }
 
 func TestCheckTypeOfFunctionCallExpression(t *testing.T) {
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int sum(int a, int b) {
         return a + b;
       }
@@ -199,10 +199,10 @@ func TestCheckTypeOfFunctionCallExpression(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-  }
+	}
 
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int sum(int a, int b) {
         return a + b;
       }
@@ -216,10 +216,10 @@ func TestCheckTypeOfFunctionCallExpression(t *testing.T) {
 		if err == nil {
 			t.Error("expect argument error, but nil")
 		}
-  }
+	}
 
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int sum(int a, int b) {
         return a + b;
       }
@@ -234,54 +234,54 @@ func TestCheckTypeOfFunctionCallExpression(t *testing.T) {
 		if err == nil {
 			t.Error("expect argument type mismatch error, but nil")
 		}
-  }
+	}
 }
 
 func TestCheckTypeOfReturn(t *testing.T) {
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int main() {
         return 1;
       }
     `)
 
-  	err := CheckType(statements)
-  	if err != nil {
-  		t.Errorf("expect no error, got %v", err)
-  	}
-  }
+		err := CheckType(statements)
+		if err != nil {
+			t.Errorf("expect no error, got %v", err)
+		}
+	}
 
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int main() {
         int *a;
         return a;
       }
     `)
 
-  	err := CheckType(statements)
-  	if err == nil {
-  		t.Error("expect return type mismatch error, but nil")
-  	}
+		err := CheckType(statements)
+		if err == nil {
+			t.Error("expect return type mismatch error, but nil")
+		}
 
-  }
+	}
 
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       void dance() {
         return;
       }
     `)
 
-  	err := CheckType(statements)
-  	if err != nil {
-  		t.Errorf("expect no error, got %v", err)
-  	}
-  }
+		err := CheckType(statements)
+		if err != nil {
+			t.Errorf("expect no error, got %v", err)
+		}
+	}
 }
 
 func TestCheckTypeOfDeclaration(t *testing.T) {
-  statements := ast(`
+	statements := ast(`
     int a, b, c;
     int ary[10];
     void v;
@@ -298,33 +298,33 @@ func TestCheckTypeOfDeclaration(t *testing.T) {
 }
 
 func TestCheckVoidType(t *testing.T) {
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       int main() {
         void a;
         a + 0;
       }
     `)
 
-  	err := CheckType(statements)
-  	if err == nil {
-  		t.Errorf("expect void error, but nil")
-  	}
-  }
+		err := CheckType(statements)
+		if err == nil {
+			t.Errorf("expect void error, but nil")
+		}
+	}
 
-  {
-    statements := ast(`
+	{
+		statements := ast(`
       void *a;
       int main() {
         ;
       }
     `)
 
-  	err := CheckType(statements)
-  	if err == nil {
-  		t.Errorf("expect void error, but nil")
-  	}
-  }
+		err := CheckType(statements)
+		if err == nil {
+			t.Errorf("expect void error, but nil")
+		}
+	}
 }
 
 func TestTypeSize(t *testing.T) {
@@ -332,7 +332,7 @@ func TestTypeSize(t *testing.T) {
 		t.Errorf("expect size of int == 4, got %v", Int().ByteSize())
 	}
 
-	arrayType := ArrayType{ Value: Int(), Size: 4 }
+	arrayType := ArrayType{Value: Int(), Size: 4}
 	expected := 4 * 4
 	if arrayType.ByteSize() != expected {
 		t.Errorf("expect size of array[4] == %v, got %v", expected, arrayType.ByteSize())

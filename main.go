@@ -10,7 +10,6 @@ import (
 	"github.com/k0kubun/pp"
 )
 
-
 func main() {
 	optimize := flag.Bool("optimize", true, "Enable optimization")
 	flag.Parse()
@@ -18,7 +17,7 @@ func main() {
 	var src string
 
 	if len(os.Args) > 1 {
-		filename := os.Args[len(os.Args) - 1]
+		filename := os.Args[len(os.Args)-1]
 		data, err := ioutil.ReadFile(filename)
 		if err != nil {
 			fmt.Println(err)

@@ -71,15 +71,15 @@ func (t FunctionType) String() string {
 }
 
 func Int() SymbolType {
-	return BasicType{ Name: "int" }
+	return BasicType{Name: "int"}
 }
 
 func Void() SymbolType {
-	return BasicType{ Name: "void" }
+	return BasicType{Name: "void"}
 }
 
 func Pointer(symbolType SymbolType) SymbolType {
-	return PointerType{ Value: symbolType }
+	return PointerType{Value: symbolType}
 }
 
 // CheckType checks that ast is well-typed
@@ -168,7 +168,7 @@ func CheckTypeOfStatement(statement Statement) error {
 		return nil
 	}
 
-	return SemanticError {
+	return SemanticError{
 		Pos: statement.Pos(),
 		Err: fmt.Errorf("type error: statement %v", statement),
 	}
@@ -221,7 +221,7 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 				return t.Value, nil
 
 			default:
-				return nil, SemanticError {
+				return nil, SemanticError{
 					Pos: e.Value.Pos(),
 					Err: fmt.Errorf("type error: expect pointer type: %v", e.Value),
 				}
@@ -284,7 +284,7 @@ func typeOfBinaryExpression(e *BinaryExpression) (SymbolType, error) {
 
 	if e.IsArithmetic() {
 		if leftType.String() == "int" && rightType.String() == "int" {
-			return BasicType{ Name: "int" }, nil
+			return BasicType{Name: "int"}, nil
 		}
 
 		switch e.Operator {

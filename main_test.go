@@ -11,7 +11,7 @@ import (
 func TestSimulateExample(t *testing.T) {
 	examples := [](struct {
 		Filename string
-		Output string
+		Output   string
 	}){
 		{"example/sum.sc", "1"},
 		{"example/sum_for.sc", "45"},
@@ -59,14 +59,14 @@ func TestSimulateExample(t *testing.T) {
 
 func compileAndSave(filename string) error {
 	src, err := ioutil.ReadFile(filename)
-  if err != nil {
-    return err
-  }
-
-  code, errs := CompileSource(string(src), true)
-  for _, err := range errs {
+	if err != nil {
 		return err
-  }
+	}
+
+	code, errs := CompileSource(string(src), true)
+	for _, err := range errs {
+		return err
+	}
 
 	dest := regexp.MustCompile("\\.sc$").ReplaceAllString(filename, ".s")
 	err = ioutil.WriteFile(dest, []byte(code), 0777)

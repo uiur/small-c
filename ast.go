@@ -169,7 +169,7 @@ type IfStatement struct {
 
 func (e *IfStatement) Pos() token.Pos { return e.pos }
 func (e *IfStatement) Statements() []Statement {
-	return []Statement{ e.TrueStatement, e.FalseStatement }
+	return []Statement{e.TrueStatement, e.FalseStatement}
 }
 
 type WhileStatement struct {
@@ -180,7 +180,7 @@ type WhileStatement struct {
 
 func (e *WhileStatement) Pos() token.Pos { return e.pos }
 func (e *WhileStatement) Statements() []Statement {
-	return []Statement{ e.Statement }
+	return []Statement{e.Statement}
 }
 
 type ForStatement struct {
@@ -194,8 +194,8 @@ type ForStatement struct {
 func (e *ForStatement) Pos() token.Pos { return e.pos }
 
 type ReturnStatement struct {
-	pos   token.Pos
-	Value Expression
+	pos            token.Pos
+	Value          Expression
 	FunctionSymbol *Symbol
 }
 

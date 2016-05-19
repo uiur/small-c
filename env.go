@@ -63,10 +63,10 @@ func (env *Env) Get(name string) *Symbol {
 }
 
 type Symbol struct {
-	Name  string
-	Level int
-	Kind  string
-	Type  SymbolType
+	Name   string
+	Level  int
+	Kind   string
+	Type   SymbolType
 	Offset int
 }
 

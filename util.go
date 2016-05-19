@@ -6,5 +6,5 @@ func ast(src string) []Statement {
 	env := &Env{}
 	Analyze(statements, env)
 
-  return statements
+	return statements
 }

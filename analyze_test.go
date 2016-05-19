@@ -217,8 +217,8 @@ func TestAnalyzeExpression(t *testing.T) {
 
 		errs := analyzeExpression(&BinaryExpression{
 			Operator: "=",
-			Left: &NumberExpression{ Value: "1" },
-			Right: &NumberExpression{ Value: "2" },
+			Left:     &NumberExpression{Value: "1"},
+			Right:    &NumberExpression{Value: "2"},
 		}, env)
 
 		if len(errs) != 1 {
