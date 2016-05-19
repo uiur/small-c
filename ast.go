@@ -1,15 +1,16 @@
 package main
 
-import "go/token"
+import (
+	"text/scanner"
+)
 
 type Token struct {
-	tok token.Token
 	lit string
-	pos token.Pos
+	pos scanner.Position
 }
 
 type Node interface {
-	Pos() token.Pos
+	Pos() scanner.Position
 }
 
 type Expression interface {
@@ -20,33 +21,33 @@ type ExpressionList struct {
 	Values []Expression
 }
 
-func (e *ExpressionList) Pos() token.Pos {
+func (e *ExpressionList) Pos() scanner.Position {
 	first := e.Values[0]
 	return first.Pos()
 }
 
 type NumberExpression struct {
-	pos   token.Pos
+	pos   scanner.Position
 	Value string
 }
 
-func (e *NumberExpression) Pos() token.Pos { return e.pos }
+func (e *NumberExpression) Pos() scanner.Position { return e.pos }
 
 type IdentifierExpression struct {
-	pos    token.Pos
+	pos    scanner.Position
 	Name   string
 	Symbol *Symbol
 }
 
-func (e *IdentifierExpression) Pos() token.Pos { return e.pos }
+func (e *IdentifierExpression) Pos() scanner.Position { return e.pos }
 
 type UnaryExpression struct {
-	pos      token.Pos
+	pos      scanner.Position
 	Operator string
 	Value    Expression
 }
 
-func (e *UnaryExpression) Pos() token.Pos { return e.pos }
+func (e *UnaryExpression) Pos() scanner.Position { return e.pos }
 
 type BinaryExpression struct {
 	Left     Expression
@@ -54,7 +55,7 @@ type BinaryExpression struct {
 	Right    Expression
 }
 
-func (e *BinaryExpression) Pos() token.Pos {
+func (e *BinaryExpression) Pos() scanner.Position {
 	return e.Left.Pos()
 }
 
@@ -84,7 +85,7 @@ type FunctionCallExpression struct {
 	Argument   Expression
 }
 
-func (e *FunctionCallExpression) Pos() token.Pos {
+func (e *FunctionCallExpression) Pos() scanner.Position {
 	identifier := e.Identifier.(*IdentifierExpression)
 	return identifier.Pos()
 }
@@ -94,23 +95,23 @@ type ArrayReferenceExpression struct {
 	Index  Expression
 }
 
-func (e *ArrayReferenceExpression) Pos() token.Pos {
+func (e *ArrayReferenceExpression) Pos() scanner.Position {
 	return e.Target.Pos()
 }
 
 type PointerExpression struct {
-	pos   token.Pos
+	pos   scanner.Position
 	Value Expression
 }
 
-func (e *PointerExpression) Pos() token.Pos { return e.pos }
+func (e *PointerExpression) Pos() scanner.Position { return e.pos }
 
 type Declarator struct {
 	Identifier Expression
 	Size       int
 }
 
-func (e *Declarator) Pos() token.Pos {
+func (e *Declarator) Pos() scanner.Position {
 	switch identifier := e.Identifier.(type) {
 	case *IdentifierExpression:
 		return identifier.Pos()
@@ -119,92 +120,92 @@ func (e *Declarator) Pos() token.Pos {
 		return identifier.Pos()
 	}
 
-	return -1
+	panic("unexpected identifier")
 }
 
 type Declaration struct {
-	pos         token.Pos
+	pos         scanner.Position
 	VarType     string
 	Declarators []*Declarator
 }
 
-func (e *Declaration) Pos() token.Pos { return e.pos }
+func (e *Declaration) Pos() scanner.Position { return e.pos }
 
 type FunctionDefinition struct {
-	pos        token.Pos
+	pos        scanner.Position
 	TypeName   string
 	Identifier Expression
 	Parameters []Expression
 	Statement  Statement
 }
 
-func (e *FunctionDefinition) Pos() token.Pos { return e.pos }
+func (e *FunctionDefinition) Pos() scanner.Position { return e.pos }
 
 type Statement interface {
 	Node
 }
 
 type CompoundStatement struct {
-	pos          token.Pos
+	pos          scanner.Position
 	Declarations []Statement
 	Statements   []Statement
 }
 
-func (e *CompoundStatement) Pos() token.Pos { return e.pos }
+func (e *CompoundStatement) Pos() scanner.Position { return e.pos }
 
 type ExpressionStatement struct {
 	Value Expression
 }
 
-func (e *ExpressionStatement) Pos() token.Pos {
+func (e *ExpressionStatement) Pos() scanner.Position {
 	return e.Value.Pos()
 }
 
 type IfStatement struct {
-	pos            token.Pos
+	pos            scanner.Position
 	Condition      Expression
 	TrueStatement  Statement
 	FalseStatement Statement
 }
 
-func (e *IfStatement) Pos() token.Pos { return e.pos }
+func (e *IfStatement) Pos() scanner.Position { return e.pos }
 func (e *IfStatement) Statements() []Statement {
 	return []Statement{e.TrueStatement, e.FalseStatement}
 }
 
 type WhileStatement struct {
-	pos       token.Pos
+	pos       scanner.Position
 	Condition Expression
 	Statement Statement
 }
 
-func (e *WhileStatement) Pos() token.Pos { return e.pos }
+func (e *WhileStatement) Pos() scanner.Position { return e.pos }
 func (e *WhileStatement) Statements() []Statement {
 	return []Statement{e.Statement}
 }
 
 type ForStatement struct {
-	pos       token.Pos
+	pos       scanner.Position
 	Init      Expression
 	Condition Expression
 	Loop      Expression
 	Statement Statement
 }
 
-func (e *ForStatement) Pos() token.Pos { return e.pos }
+func (e *ForStatement) Pos() scanner.Position { return e.pos }
 
 type ReturnStatement struct {
-	pos            token.Pos
+	pos            scanner.Position
 	Value          Expression
 	FunctionSymbol *Symbol
 }
 
-func (e *ReturnStatement) Pos() token.Pos { return e.pos }
+func (e *ReturnStatement) Pos() scanner.Position { return e.pos }
 
 type ParameterDeclaration struct {
-	pos        token.Pos
+	pos        scanner.Position
 	TypeName   string
 	Identifier Expression
 }
 
-func (e *ParameterDeclaration) Pos() token.Pos { return e.pos }
+func (e *ParameterDeclaration) Pos() scanner.Position { return e.pos }

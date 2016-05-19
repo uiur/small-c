@@ -2,23 +2,18 @@ package main
 
 import (
 	"fmt"
-	"go/scanner"
-	"go/token"
 	"strings"
 )
 
 // Parse returns ast
 func Parse(src string) ([]Statement, error) {
-	fset := token.NewFileSet()
-	file := fset.AddFile("", fset.Base(), len(src))
-
 	l := new(Lexer)
-	l.Init(file, []byte(src), nil, scanner.ScanComments)
+	l.Init(src)
 	yyErrorVerbose = true
 
 	fail := yyParse(l)
 	if fail == 1 {
-		lineNumber, columnNumber := posToLineInfo(src, int(l.pos))
+		lineNumber, columnNumber := posToLineInfo(src, l.pos.Offset)
 		err := fmt.Errorf("%d:%d: %s", lineNumber, columnNumber, l.errMessage)
 
 		return nil, err

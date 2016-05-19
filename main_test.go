@@ -35,7 +35,7 @@ func TestSimulateExample(t *testing.T) {
 			err := compileAndSave(sourceFilename)
 
 			if err != nil {
-				t.Error(err)
+				t.Errorf("%v: %v", sourceFilename, err)
 				continue
 			}
 		}

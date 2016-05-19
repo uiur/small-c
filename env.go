@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go/token"
+	"text/scanner"
 )
 
 type Env struct {
@@ -88,7 +88,7 @@ func (symbol *Symbol) AddressPointer() string {
 
 type SemanticError struct {
 	error
-	Pos token.Pos
+	Pos scanner.Position
 	Err error
 }
 

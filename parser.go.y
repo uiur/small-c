@@ -2,8 +2,6 @@
 package main
 
 import (
-    "go/scanner"
-    "go/token"
     "strconv"
 )
 
@@ -327,80 +325,3 @@ identifier
   }
 
 %%
-
-type Lexer struct {
-    scanner.Scanner
-    result []Statement
-    token Token
-    pos token.Pos
-    errMessage string
-}
-
-var tokenMap = map[token.Token]int {
-  token.LOR: LOGICAL_OR,
-  token.LAND: LOGICAL_AND,
-  token.IF: IF,
-  token.ELSE: ELSE,
-  token.RETURN: RETURN,
-  token.EQL: EQL,
-  token.NEQ: NEQ,
-  token.GEQ: GEQ,
-  token.LEQ: LEQ,
-  token.FOR: FOR,
-}
-
-func identToNumber(lit string) int {
-  switch lit {
-  case "int", "void":
-    return TYPE
-  case "while":
-    return WHILE
-  default:
-    return IDENT
-  }
-}
-
-func (l *Lexer) Lex(lval *yySymType) int {
-  pos, tok, lit := l.Scan()
-  token_number := int(tok)
-
-  if tokenMap[tok] > 0 {
-    return tokenMap[tok]
-  }
-
-  switch tok {
-  case token.EOF:
-    return -1
-  case token.INT:
-    token_number = NUMBER
-  case token.CHAR:
-    token_number = CHAR
-  case token.ADD, token.SUB, token.MUL, token.QUO, token.AND,
-    token.COMMA, token.SEMICOLON,
-    token.ASSIGN,
-    token.GTR, token.LSS,
-    token.LBRACK, token.RBRACK,
-    token.LBRACE, token.RBRACE,
-    token.LPAREN, token.RPAREN:
-    // newline
-    if tok.String() == ";" && lit != ";" {
-      // read next
-      return l.Lex(lval)
-    }
-    token_number = int(tok.String()[0])
-  case token.IDENT:
-    token_number = identToNumber(lit)
-  default:
-    return -1
-  }
-
-  lval.token = Token{ tok: tok, lit: lit, pos: pos }
-  l.token = lval.token
-
-  return token_number
-}
-
-func (l *Lexer) Error(e string) {
-  l.pos = l.token.pos
-  l.errMessage = e
-}
