@@ -169,12 +169,13 @@ func (s *IRReturnStatement) String() string {
   return fmt.Sprintf("return %s", s.Var.Name)
 }
 
-type IRPrintStatement struct {
+type IRSystemCallStatement struct {
+  Name string
   Var *Symbol
 }
 
-func (s *IRPrintStatement) String() string {
-  return fmt.Sprintf("print(%s)", s.Var.Name)
+func (s *IRSystemCallStatement) String() string {
+  return fmt.Sprintf("%v(%s)", s.Name, s.Var.Name)
 }
 
 type IRCompoundStatement struct {
@@ -346,7 +347,8 @@ func compileIRStatement(statement Statement) IRStatement {
 
     case *FunctionCallExpression:
       name := findIdentifierExpression(e.Identifier).Name
-      if name == "print" {
+
+      if isSystemCall(name) {
         tmp := tmpvar()
         arg, decls, beforeArg := compileIRExpression(e.Argument)
 
@@ -357,7 +359,8 @@ func compileIRStatement(statement Statement) IRStatement {
               Var: tmp,
               Expression: arg,
             },
-            &IRPrintStatement{
+            &IRSystemCallStatement{
+              Name: name,
               Var: tmp,
             },
           ),
@@ -729,4 +732,13 @@ func assignStatementBySymbol(symbol *Symbol, value int) *ExpressionStatement {
       Right: &NumberExpression{ Value: strconv.Itoa(value) },
     },
   }
+}
+
+func isSystemCall(name string) bool {
+  switch name {
+  case "print", "putchar":
+    return true
+  }
+
+  return false
 }

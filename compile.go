@@ -211,11 +211,24 @@ func compileStatement(statement IRStatement, function *IRFunctionDefinition) []s
   case *IRGotoStatement:
     code = append(code, jmp(s.Label))
 
-  case *IRPrintStatement:
-    return []string{
-      "li $v0, 1",
-      lw("$a0", s.Var),
-      "syscall",
+  case *IRSystemCallStatement:
+    switch s.Name {
+    case "print":
+      return []string{
+        "li $v0, 1",
+        lw("$a0", s.Var),
+        "syscall",
+      }
+    case "putchar":
+      return []string{
+        "li $v0, 11",
+        lw("$a0", s.Var),
+        "syscall",
+      }
+
+    default:
+      panic("invalid system call: " + s.Name)
+
     }
   }
 

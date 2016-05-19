@@ -53,7 +53,10 @@ func CompileSource(src string, optimize bool) (string, []error) {
 		pp.Println(statements)
 	}
 
-	prelude, _ := Parse("void print(int i);\n")
+	prelude, _ := Parse(`
+		void print(int i);
+		void putchar(int ch);
+	`)
 	statements = append(prelude, statements...)
 
 	env := &Env{}

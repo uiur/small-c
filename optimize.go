@@ -91,7 +91,7 @@ func transformByDeadCodeElimination(f *IRFunctionDefinition, allStatementState m
           markAsUsed(s, argVar)
         }
 
-      case *IRPrintStatement:
+      case *IRSystemCallStatement:
         markAsUsed(s, s.Var)
 
       case *IRReturnStatement:

@@ -24,6 +24,7 @@ func TestSimulateExample(t *testing.T) {
 		{"example/optimize_constant.sc", "1"},
 		{"example/bubble_sort.sc", "12345678"},
 		{"example/quick_sort.sc", "12345678"},
+		{"example/putchar.sc", "hello world"},
 	}
 
 	for _, example := range examples {
@@ -51,7 +52,7 @@ func TestSimulateExample(t *testing.T) {
 		expected := example.Output
 
 		if output != expected {
-			t.Errorf("expect `%v`'s output to be `%v`, got `%v`", filename, expected, output)
+			t.Errorf("`%v`: expect `%v`, got `%v`", filename, expected, output)
 		}
 	}
 }
