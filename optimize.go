@@ -206,7 +206,12 @@ func reachingDefinitionsOfStatements(blocks []*DataflowBlock, blockOut map[*Data
 		inState := blockIn(blockOut, block)
 
 		for _, statement := range block.Statements {
-			allStatementState[statement] = inState
+			for key, value := range inState {
+				if allStatementState[statement] == nil {
+					allStatementState[statement] = make(BlockState)
+				}
+				allStatementState[statement][key] = value
+			}
 			inState = analyzeReachingDefinition(statement, inState)
 		}
 	}

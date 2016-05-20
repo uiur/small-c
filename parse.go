@@ -79,6 +79,10 @@ func Walk(statement Statement) Statement {
 			},
 		}
 
+	case *WhileStatement:
+		s.Condition = WalkExpression(s.Condition)
+		s.Statement = Walk(s.Statement)
+
 	case *IfStatement:
 		s.Condition = WalkExpression(s.Condition)
 		s.TrueStatement = Walk(s.TrueStatement)

@@ -226,7 +226,6 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 					Err: fmt.Errorf("type error: expect pointer type: %v", e.Value),
 				}
 			}
-
 		}
 
 	case *BinaryExpression:
@@ -268,7 +267,10 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 		return funcType.Return, nil
 	}
 
-	return nil, fmt.Errorf("type error: expression %v", expression)
+	return nil, SemanticError{
+		Pos: expression.Pos(),
+		Err: fmt.Errorf("type error: expression %v", expression),
+	}
 }
 
 func typeOfBinaryExpression(e *BinaryExpression) (SymbolType, error) {
