@@ -5,15 +5,33 @@ import (
 )
 
 func TestLex(t *testing.T) {
-  {
-    l := new(Lexer)
-    l.Init(`42`)
+  testLex(t, `42 7 0`, []int{ NUMBER, NUMBER, NUMBER })
+  testLex(t, `a == 100`, []int{ IDENT, EQL, NUMBER })
+}
 
-    var sym yySymType
-    result := l.Lex(&sym)
+func testLex(t *testing.T, code string, tokens []int) {
+  l := new(Lexer)
+  l.Init(`a == 100`)
 
-    if result != NUMBER {
-      t.Errorf("expect NUMBER, got %v", result)
+  tokenTypes := []int{ IDENT, EQL, NUMBER }
+  result := []int{}
+
+  var sym yySymType
+  for {
+    tokenNumber := l.Lex(&sym)
+    if tokenNumber == -1 {
+      break
+    }
+    result = append(result, tokenNumber)
+  }
+
+  if len(result) != len(tokenTypes) {
+    t.Errorf("expect %v tokens, got %v: %v", len(tokenTypes), len(result), result)
+  }
+
+  for i, resultType := range result {
+    if resultType != tokenTypes[i] {
+      t.Errorf("%v: expect %v, got %v", i, tokenTypes[i], resultType)
     }
   }
 }
