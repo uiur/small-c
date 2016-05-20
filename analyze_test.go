@@ -226,3 +226,17 @@ func TestAnalyzeExpression(t *testing.T) {
 		}
 	}
 }
+
+func TestAnalyzeArrayAssignment(t *testing.T) {
+	statements, _ := Parse(`
+		int main() {
+			int data[10];
+			data = 10;
+		}
+	`)
+
+	errs := Analyze(statements, &Env{})
+	if len(errs) != 1 {
+		t.Errorf("should have 1 error: %v", errs)
+	}
+}

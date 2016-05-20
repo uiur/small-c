@@ -202,7 +202,8 @@ func analyzeExpression(expression Expression, env *Env) []error {
 				errs = append(errs, expressionErrs...)
 
 				if len(errs) == 0 {
-					if !left.Symbol.IsVariable() {
+					_, isArrayType := left.Symbol.Type.(ArrayType)
+					if !left.Symbol.IsVariable() || isArrayType {
 						leftIsAssignable = false
 					}
 				}
@@ -211,6 +212,7 @@ func analyzeExpression(expression Expression, env *Env) []error {
 				if left.Operator != "*" {
 					leftIsAssignable = false
 				}
+
 			default:
 				leftIsAssignable = false
 			}
