@@ -273,6 +273,7 @@ func foldConstantExpression(statement IRStatement, expression IRExpression, allS
 					value = 1
 				}
 				return true, value
+
 			case ">":
 				value := 0
 				if leftValue > rightValue {
@@ -300,6 +301,14 @@ func foldConstantExpression(statement IRStatement, expression IRExpression, allS
 					value = 1
 				}
 				return true, value
+
+			case "!=":
+				value := 0
+				if leftValue != rightValue {
+					value = 1
+				}
+				return true, value
+
 			}
 
 			panic("unexpected operator: " + e.Operator)

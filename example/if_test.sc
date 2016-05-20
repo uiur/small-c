@@ -24,4 +24,10 @@ int main() {
   if (a >= b) {
     print(5);
   }
+
+  a = 1;
+  b = 1;
+  if (a != b) {
+    print(6);
+  }
 }

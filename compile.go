@@ -303,6 +303,19 @@ func assignBinaryOperation(register string, operator string, left string, right 
 			endLabel + ":",
 		}
 
+	case "!=":
+		falseLabel := label("beq_true")
+		endLabel := label("beq_end")
+
+		return []string{
+			fmt.Sprintf("beq $t1, $t2, %s", falseLabel),
+			li(register, 1),
+			fmt.Sprintf("j %s", endLabel),
+			falseLabel + ":",
+			li(register, 1),
+			endLabel + ":",
+		}
+
 	case ">":
 		// a > b <=> (a <= b) < 1
 		return append(assignBinaryOperation(register, "<=", left, right),
