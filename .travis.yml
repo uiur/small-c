@@ -11,4 +11,10 @@ before_install:
   - cd ../../
   - make deps
 
-script: make test
+install:
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/mattn/goveralls
+
+script: make ci-test
+
+secure: "WK4J/RFtZjHY9wZLSW3UqEzwfzpl/klMpTzHLuMjTvfCE5+Op7bAwsn4uPosXVPkTkQRDrP4ckl153EFjq57MkvxLwaut3I7qlQSpspibP5HEzpMVkwwhQkYSMw0qCDYajYoWLNTidGcIdm4FMTr/tXdJkMy2pBKiXj8lKiZRofVL6n4oHMnqevsIMWVY7wi1j3+iY8JrVBes3kfYB9zwMPeHHWOVd6SygBM1+Ug6qTFSSUPQn5YSr8W8dPzhHImmqlL3A2CxofAnhw01P0jA5EQgaWiTa9vExQ3uJK2QP8tKQQL62LxQoEN+DYRRa5Ix0kebgQXk5kYgHmF35/fzLXN++FZ8SvJPzocMKkf4Qcx/4gCiuXbNU3UdWP3Z8UHgfJ61m70qeTpqD9zHZlA73cBvcvcwE6exmi7KS4WCTYt4B/l/Sbs5h2CeWq/91QQQXw6UFhfHfL8awmVIUBvvH0L8RlR6skO8OrTe/fO/4hZrMTnWfshFicakZAtTt8/eBBMltoZ31GM9BaRuPkXFbRkUSYdbeIDHKhAhxKGbAK7pgDGkJrijh3MVGT+PiH5JIytpbjqf1OBE9zr24gAcoqWt02o9puDhHRiu1LwrVVLi2Y5RNJ9QzNlg6jib661VC1ssDLxxrVLdzz3qM4Qb1SO48itPrlkTxFveAMkMIE="

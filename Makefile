@@ -12,6 +12,10 @@ parser.go: parser.go.y
 test: parser.go
 	go test -v -cover ./...
 
+ci-test: parser.go
+	go test -v -covermode=count -coverprofile=coverage.out
+$HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+
 examples := $(wildcard example/*.sc)
 destfiles := $(patsubst example/%.sc,example/%.s,$(examples))
 example: $(destfiles)
@@ -27,4 +31,4 @@ report/%.pdf: %.dvi
 %.dvi: report/%.tex
 	platex $<
 
-.PHONY: test
+.PHONY: test ci-test
