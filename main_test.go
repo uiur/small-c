@@ -27,6 +27,7 @@ func TestSimulateExample(t *testing.T) {
 		{"example/putchar.sc", "hello world"},
 		{"example/gcd.sc", "21"},
 		{"example/prime.sc", "2 3 5 7 9 11 13 15 17 19 "},
+		{"example/emoji.sc", "45"},
 	}
 
 	for _, example := range examples {
