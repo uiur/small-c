@@ -25,6 +25,7 @@ func TestSimulateExample(t *testing.T) {
 		{"example/bubble_sort.sc", "12345678"},
 		{"example/quick_sort.sc", "12345678"},
 		{"example/putchar.sc", "hello world"},
+		{"example/gcd.sc", "21"},
 	}
 
 	for _, example := range examples {
