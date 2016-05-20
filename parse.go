@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 )
 
 // Parse returns ast
@@ -13,27 +12,12 @@ func Parse(src string) ([]Statement, error) {
 
 	fail := yyParse(l)
 	if fail == 1 {
-		lineNumber, columnNumber := posToLineInfo(src, l.pos.Offset)
-		err := fmt.Errorf("%d:%d: %s", lineNumber, columnNumber, l.errMessage)
+		err := fmt.Errorf("%d:%d: %s", l.pos.Line, l.pos.Column, l.errMessage)
 
 		return nil, err
 	}
 
 	return l.result, nil
-}
-
-func posToLineInfo(src string, pos int) (int, int) {
-	if pos < 0 {
-		panic("pos must be positive")
-	}
-
-	lineNumber := strings.Count(src[:pos], "\n") + 1
-
-	lines := strings.Split(src[:pos], "\n")
-	lastLine := lines[len(lines)-1]
-	columnNumber := len(lastLine)
-
-	return lineNumber, columnNumber
 }
 
 // Walk iterates over statement nodes and replace syntax sugar

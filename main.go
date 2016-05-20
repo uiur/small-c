@@ -88,8 +88,7 @@ func Exit(src string, errs []error) {
 	for _, err := range errs {
 		switch e := err.(type) {
 		case SemanticError:
-			lineNumber, columnNumber := posToLineInfo(src, e.Pos.Offset)
-			err = fmt.Errorf("%d:%d: %v", lineNumber, columnNumber, e.Err)
+			err = fmt.Errorf("%d:%d: %v", e.Pos.Line, e.Pos.Offset, e.Err)
 
 		default:
 		}
