@@ -1,5 +1,5 @@
 # Small C
-[![Build Status](https://travis-ci.org/uiureo/small-c.svg?branch=master)](https://travis-ci.org/uiureo/small-c)
+[![Build Status](https://travis-ci.org/uiureo/small-c.svg?branch=master)](https://travis-ci.org/uiureo/small-c) [![Coverage Status](https://coveralls.io/repos/github/uiureo/small-c/badge.svg?branch=master)](https://coveralls.io/github/uiureo/small-c?branch=master)
 
 Small C compiler in Go. "Small C" is a small subset of C.
 
