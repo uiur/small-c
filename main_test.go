@@ -83,6 +83,16 @@ func TestBasic(t *testing.T) {
 	}
 }
 
+func TestErr(t *testing.T) {
+	filenames, _ := filepath.Glob("test/err/*.sc")
+	for _, filename := range filenames {
+		err := compileAndSave(filename)
+		if err == nil {
+			t.Errorf("%v: expect error, got ok", filename)
+		}
+	}
+}
+
 func compileAndSave(filename string) error {
 	src, err := ioutil.ReadFile(filename)
 	if err != nil {
