@@ -49,14 +49,14 @@ func Walk(statement Statement) Statement {
 		body := Walk(s.Statement)
 		return &CompoundStatement{
 			Statements: []Statement{
-				&ExpressionStatement{Value: s.Init},
+				&ExpressionStatement{Value: WalkExpression(s.Init)},
 				&WhileStatement{
 					pos:       s.Pos(),
-					Condition: s.Condition,
+					Condition: WalkExpression(s.Condition),
 					Statement: &CompoundStatement{
 						Statements: []Statement{
 							body,
-							&ExpressionStatement{Value: s.Loop},
+							&ExpressionStatement{Value: WalkExpression(s.Loop)},
 						},
 					},
 				},

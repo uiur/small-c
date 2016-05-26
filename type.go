@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -283,7 +284,7 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 
 	return nil, SemanticError{
 		Pos: expression.Pos(),
-		Err: fmt.Errorf("type error: expression %v", expression),
+		Err: fmt.Errorf("type error: expression %s", reflect.TypeOf(expression)),
 	}
 }
 
