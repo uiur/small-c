@@ -202,7 +202,7 @@ expression
 
 assign_expression
   : logical_or_expression
-  | assign_expression '=' logical_or_expression
+  | logical_or_expression '=' assign_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "=", Right: $3 }
   }

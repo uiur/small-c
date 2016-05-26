@@ -83,6 +83,13 @@ func TestBasic(t *testing.T) {
 	}
 }
 
+func TestAdvanced(t *testing.T) {
+	filenames, _ := filepath.Glob("test/advanced/*.sc")
+	for _, filename := range filenames {
+		testOk(t, filename)
+	}
+}
+
 func TestErr(t *testing.T) {
 	filenames, _ := filepath.Glob("test/err/*.sc")
 	for _, filename := range filenames {
