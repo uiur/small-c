@@ -60,11 +60,35 @@ func TestAdd(t *testing.T) {
 		return
 	}
 
-	env.Add(&Symbol{Name: "f", Kind: "proto"})
-	err = env.Add(&Symbol{Name: "f", Kind: "proto"})
+	{
+		env := &Env{}
+		funcType := FunctionType{Return: Int(), Args: []SymbolType{Int()}}
 
-	if err != nil {
-		t.Errorf("kind `proto` can be defined double, but got \"%v\"", err)
+		env.Add(&Symbol{Name: "f", Kind: "proto", Type: funcType})
+		err = env.Add(&Symbol{Name: "f", Kind: "proto", Type: funcType})
+
+		if err != nil {
+			t.Errorf("kind `proto` can be defined double, but got \"%v\"", err)
+		}
+	}
+
+	{
+		env := &Env{}
+		env.Add(&Symbol{
+			Name: "f",
+			Kind: "proto",
+			Type: FunctionType{Return: Int(), Args: []SymbolType{Int()}},
+		})
+
+		err := env.Add(&Symbol{
+			Name: "f",
+			Kind: "fun",
+			Type: FunctionType{Return: Void(), Args: []SymbolType{Int()}},
+		})
+
+		if err == nil {
+			t.Errorf("expect prototype mismatch error, but got nil")
+		}
 	}
 }
 

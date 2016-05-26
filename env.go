@@ -25,14 +25,22 @@ func (env *Env) Add(symbol *Symbol) error {
 
 	name := symbol.Name
 	found := env.Table[name]
-	if found != nil && found.Kind != "proto" {
-		return fmt.Errorf("`%s` is already defined", name)
-	}
+	if found != nil {
+		if symbol.IsVariable() {
+			if (found.Kind == "proto" || found.Kind == "fun") && symbol.IsGlobal() {
+				return fmt.Errorf("function `%v` is already defined", name)
+			}
+		}
 
-	if found != nil && found.Kind == "proto" && symbol.Kind == "fun" {
-		functionType, _ := found.Type.(FunctionType)
-		if symbol.Type.String() != functionType.String() {
-			return fmt.Errorf("prototype mismatch error: function `%v`: `%v` != `%v`", name , functionType, symbol.Type)
+		if found.Kind != "proto" {
+			return fmt.Errorf("`%s` is already defined", name)
+		}
+
+		if found.Kind == "proto" && (symbol.Kind == "fun" || symbol.Kind == "proto") {
+			functionType, _ := found.Type.(FunctionType)
+			if symbol.Type.String() != functionType.String() {
+				return fmt.Errorf("prototype mismatch error: function `%v`: `%v` != `%v`", name , functionType, symbol.Type)
+			}
 		}
 	}
 
