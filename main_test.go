@@ -61,30 +61,10 @@ func TestSimulateExample(t *testing.T) {
 func TestSampleOk(t *testing.T) {
 	sampleFiles, _ := filepath.Glob("sample/ok*.sc")
 	for _, sampleFile := range sampleFiles {
-		sourceFilename := sampleFile
-		filename := regexp.MustCompile("\\.sc$").ReplaceAllString(sourceFilename, ".s")
-
-		{
-			err := compileAndSave(sourceFilename)
-
-			if err != nil {
-				t.Errorf("%v: %v", sourceFilename, err)
-				continue
-			}
-
-			output, err := runSpim(filename)
-			if err != nil {
-				t.Error(err)
-				continue
-			}
-
-			expected := "1"
-			if output != expected {
-				t.Errorf("`%v`: expect `%v`, got `%v`", filename, expected, output)
-			}
-		}
+		testOk(t, sampleFile)
 	}
 }
+
 
 func TestSampleNg(t *testing.T) {
 	sampleFiles, _ := filepath.Glob("sample/ng*.sc")
@@ -93,6 +73,13 @@ func TestSampleNg(t *testing.T) {
 		if err == nil {
 			t.Errorf("%v: expect error, got ok", filename)
 		}
+	}
+}
+
+func TestBasic(t *testing.T) {
+	filenames, _ := filepath.Glob("test/basic/*.sc")
+	for _, filename := range filenames {
+		testOk(t, filename)
 	}
 }
 
@@ -117,13 +104,37 @@ func compileAndSave(filename string) error {
 }
 
 func runSpim(filename string) (string, error) {
-		byteOut, err := exec.Command("spim", "-file", filename).Output()
+	byteOut, err := exec.Command("spim", "-file", filename).Output()
+	if err != nil {
+		return "", err
+	}
+
+	lines := strings.Split(string(byteOut), "\n")
+	output := lines[len(lines)-1]
+
+	return output, nil
+}
+
+func testOk(t *testing.T, sourceFilename string) {
+	filename := regexp.MustCompile("\\.sc$").ReplaceAllString(sourceFilename, ".s")
+
+	{
+		err := compileAndSave(sourceFilename)
+
 		if err != nil {
-			return "", err
+			t.Errorf("%v: %v", sourceFilename, err)
+			return
 		}
 
-		lines := strings.Split(string(byteOut), "\n")
-		output := lines[len(lines)-1]
+		output, err := runSpim(filename)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-		return output, nil
+		expected := "1"
+		if output != expected {
+			t.Errorf("`%v`: expect `%v`, got `%v`", filename, expected, output)
+		}
+	}
 }

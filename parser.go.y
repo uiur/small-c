@@ -202,51 +202,51 @@ expression
 
 assign_expression
   : logical_or_expression
-  | logical_or_expression '=' logical_or_expression
+  | assign_expression '=' logical_or_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "=", Right: $3 }
   }
 
 logical_or_expression
   : logical_and_expression
-  | logical_and_expression LOGICAL_OR logical_and_expression
+  | logical_or_expression LOGICAL_OR logical_and_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "||", Right: $3}
   }
 
 logical_and_expression
   : equal_expression
-  | equal_expression LOGICAL_AND equal_expression
+  | logical_and_expression LOGICAL_AND equal_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "&&", Right: $3}
   }
 
 equal_expression
   : relation_expression
-  | relation_expression EQL relation_expression
+  | equal_expression EQL relation_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "==", Right: $3}
   }
-  | relation_expression NEQ relation_expression
+  | equal_expression NEQ relation_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "!=", Right: $3}
   }
 
 relation_expression
   : add_expression
-  | add_expression '>' add_expression
+  | relation_expression '>' add_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: ">", Right: $3}
   }
-  | add_expression '<' add_expression
+  | relation_expression '<' add_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "<", Right: $3}
   }
-  | add_expression GEQ add_expression
+  | relation_expression GEQ add_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: ">=", Right: $3}
   }
-  | add_expression LEQ add_expression
+  | relation_expression LEQ add_expression
   {
     $$ = &BinaryExpression{ Left: $1, Operator: "<=", Right: $3}
   }

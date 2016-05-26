@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/k0kubun/pp"
 )
 
 // intermediate representation
@@ -514,7 +512,6 @@ func compileIRStatement(statement Statement) IRStatement {
 		}
 
 	default:
-		pp.Println(s)
 		panic("unexpected statement")
 	}
 }
@@ -682,7 +679,9 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
 		case *ExpressionList:
 			args = arg.Values
 		default:
-			args = []Expression{arg}
+			if arg != nil {
+				args = []Expression{arg}
+			}
 		}
 
 		var argSymbols []*Symbol
