@@ -33,6 +33,7 @@ func (state BlockState) Equal(anotherState BlockState) bool {
 func Optimize(program *IRProgram) *IRProgram {
 	for i, f := range program.Functions {
 		statements := flatStatement(f)
+
 		blocks := splitStatemetsIntoBlocks(statements)
 
 		buildDataflowGraph(blocks)
@@ -74,12 +75,20 @@ func transformByDeadCodeElimination(f *IRFunctionDefinition, allStatementState m
 				used[s] = true
 
 			case *IRAssignmentStatement:
+				if s.Var.IsGlobal() {
+					used[s] = true
+				}
+
 				vars := extractVarsFromExpression(s.Expression)
 				for _, v := range vars {
 					markAsUsed(s, v)
 				}
 
 			case *IRReadStatement:
+				if s.Dest.IsGlobal() {
+					used[s] = true
+				}
+
 				markAsUsed(s, s.Src)
 
 			case *IRWriteStatement:
@@ -87,6 +96,10 @@ func transformByDeadCodeElimination(f *IRFunctionDefinition, allStatementState m
 				markAsUsed(s, s.Dest)
 
 			case *IRCallStatement:
+				if s.Dest.IsGlobal() {
+					used[s] = true
+				}
+
 				for _, argVar := range s.Vars {
 					markAsUsed(s, argVar)
 				}
