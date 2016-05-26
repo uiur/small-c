@@ -134,6 +134,10 @@ func CheckTypeOfStatement(statement Statement) error {
 		return CheckTypeOfStatement(s.Statement)
 
 	case *ExpressionStatement:
+		if s.Value == nil {
+			return nil
+		}
+
 		_, err := typeOfExpression(s.Value)
 		return err
 
@@ -354,6 +358,10 @@ func typeOfBinaryExpression(e *BinaryExpression) (SymbolType, error) {
 }
 
 func checkTypeOfCondition(condition Expression) error {
+	if condition == nil {
+		return nil
+	}
+
 	t, err := typeOfExpression(condition)
 	if err != nil {
 		return err

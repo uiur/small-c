@@ -65,7 +65,7 @@ func analyzeFunctionDefinition(s *FunctionDefinition, env *Env) []error {
 		}
 	}
 
-	returnType := BasicType{Name: s.TypeName}
+	returnType := composeType(s.Identifier, BasicType{Name: s.TypeName})
 	symbolType := FunctionType{Return: returnType, Args: argTypes}
 
 	kind := ""

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -334,6 +335,10 @@ func compileIRStatement(statement Statement) IRStatement {
 		}
 
 	case *ExpressionStatement:
+		if s.Value == nil {
+			return nil
+		}
+
 		switch e := s.Value.(type) {
 		case *ExpressionList:
 			var statements []IRStatement
@@ -719,12 +724,9 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
 			Var: result,
 		}, decls, statements
 
-	default:
-		panic("unexpected expression")
-
 	}
 
-	panic("unexpected expression")
+	panic(fmt.Sprintf("unexpected expression: `%v`", reflect.TypeOf(expression)))
 }
 
 func assignStatementBySymbol(symbol *Symbol, value int) *ExpressionStatement {

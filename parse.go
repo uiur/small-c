@@ -46,21 +46,38 @@ func Walk(statement Statement) Statement {
 	case *ForStatement:
 		// for (init; cond; loop) s
 		// => init; while (cond) { s; loop; }
+
+		var statements []Statement
+		if s.Init != nil {
+			statements = append(statements, &ExpressionStatement{Value: WalkExpression(s.Init)})
+		}
+
 		body := Walk(s.Statement)
-		return &CompoundStatement{
-			Statements: []Statement{
-				&ExpressionStatement{Value: WalkExpression(s.Init)},
-				&WhileStatement{
-					pos:       s.Pos(),
-					Condition: WalkExpression(s.Condition),
-					Statement: &CompoundStatement{
-						Statements: []Statement{
-							body,
-							&ExpressionStatement{Value: WalkExpression(s.Loop)},
-						},
-					},
+		whileBody := []Statement{body}
+		if s.Loop != nil {
+			whileBody = append(whileBody, &ExpressionStatement{Value: WalkExpression(s.Loop)})
+		}
+
+
+		var condition Expression
+		if s.Condition != nil {
+			condition = WalkExpression(s.Condition)
+		} else {
+			condition = &NumberExpression{Value: "1"}
+		}
+
+		statements = append(statements,
+			&WhileStatement{
+				pos:       s.Pos(),
+				Condition: condition,
+				Statement: &CompoundStatement{
+					Statements: whileBody,
 				},
 			},
+		)
+
+		return &CompoundStatement{
+			Statements: statements,
 		}
 
 	case *WhileStatement:
