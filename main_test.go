@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"path/filepath"
 )
 
 func TestSimulateExample(t *testing.T) {
@@ -43,19 +44,54 @@ func TestSimulateExample(t *testing.T) {
 			}
 		}
 
-		byteOut, err := exec.Command("spim", "-file", filename).Output()
-
+		output, err := runSpim(filename)
 		if err != nil {
 			t.Error(err)
 			continue
 		}
 
-		lines := strings.Split(string(byteOut), "\n")
-		output := lines[len(lines)-1]
 		expected := example.Output
 
 		if output != expected {
 			t.Errorf("`%v`: expect `%v`, got `%v`", filename, expected, output)
+		}
+	}
+}
+
+func TestSampleOk(t *testing.T) {
+	sampleFiles, _ := filepath.Glob("sample/ok*.sc")
+	for _, sampleFile := range sampleFiles {
+		sourceFilename := sampleFile
+		filename := regexp.MustCompile("\\.sc$").ReplaceAllString(sourceFilename, ".s")
+
+		{
+			err := compileAndSave(sourceFilename)
+
+			if err != nil {
+				t.Errorf("%v: %v", sourceFilename, err)
+				continue
+			}
+
+			output, err := runSpim(filename)
+			if err != nil {
+				t.Error(err)
+				continue
+			}
+
+			expected := "1"
+			if output != expected {
+				t.Errorf("`%v`: expect `%v`, got `%v`", filename, expected, output)
+			}
+		}
+	}
+}
+
+func TestSampleNg(t *testing.T) {
+	sampleFiles, _ := filepath.Glob("sample/ng*.sc")
+	for _, filename := range sampleFiles {
+		err := compileAndSave(filename)
+		if err == nil {
+			t.Errorf("%v: expect error, got ok", filename)
 		}
 	}
 }
@@ -78,4 +114,16 @@ func compileAndSave(filename string) error {
 	}
 
 	return nil
+}
+
+func runSpim(filename string) (string, error) {
+		byteOut, err := exec.Command("spim", "-file", filename).Output()
+		if err != nil {
+			return "", err
+		}
+
+		lines := strings.Split(string(byteOut), "\n")
+		output := lines[len(lines)-1]
+
+		return output, nil
 }

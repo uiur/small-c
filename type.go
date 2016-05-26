@@ -237,7 +237,9 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 		case *ExpressionList:
 			args = arg.Values
 		default:
-			args = []Expression{arg}
+			if arg != nil {
+				args = []Expression{arg}
+			}
 		}
 
 		identifier := findIdentifierExpression(e.Identifier)
@@ -246,7 +248,7 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 		if len(args) != len(funcType.Args) {
 			return nil, SemanticError{
 				Pos: e.Pos(),
-				Err: fmt.Errorf("function `%v`'s must be called with %v arguments, not %v", identifier.Name, len(funcType.Args), len(args)),
+				Err: fmt.Errorf("function `%v` must be called with %v arguments, not %v", identifier.Name, len(funcType.Args), len(args)),
 			}
 		}
 

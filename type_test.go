@@ -169,7 +169,7 @@ func TestCheckTypeOfWhileStatement(t *testing.T) {
 	{
 		statements := ast(`
       int main() {
-        int **i;
+        int *i;
         while (i > 0) {
           ;
         }

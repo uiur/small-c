@@ -102,7 +102,7 @@ function_definition
 
 identifier_expression
   : identifier
-  | '*' identifier_expression
+  | '*' identifier
   {
     $$ = &UnaryExpression{ pos: $1.pos, Operator: "*", Value: $2 }
   }
