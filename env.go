@@ -29,6 +29,13 @@ func (env *Env) Add(symbol *Symbol) error {
 		return fmt.Errorf("`%s` is already defined", name)
 	}
 
+	if found != nil && found.Kind == "proto" && symbol.Kind == "fun" {
+		functionType, _ := found.Type.(FunctionType)
+		if symbol.Type.String() != functionType.String() {
+			return fmt.Errorf("prototype mismatch error: function `%v`: `%v` != `%v`", name , functionType, symbol.Type)
+		}
+	}
+
 	if symbol.Level == 0 {
 		symbol.Level = env.Level
 	}
