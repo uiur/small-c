@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "Running sample..."
+./run sample/ok*.sc
+./run sample/ng*.sc 2>&1 > /dev/null

@@ -37,4 +37,4 @@ parser.go
 *.log
 *.aux
 
-example/*.s
+*.s
