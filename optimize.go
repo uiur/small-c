@@ -158,6 +158,23 @@ func removeUnusedVariableDeclaration(f *IRFunctionDefinition) *IRFunctionDefinit
 	return transformed.(*IRFunctionDefinition)
 }
 
+func extractAddressVarsFromExpression(expression IRExpression) []*Symbol {
+	switch e := expression.(type) {
+	case *IRBinaryExpression:
+		var vars []*Symbol
+		vars = append(vars, extractAddressVarsFromExpression(e.Left)...)
+		vars = append(vars, extractAddressVarsFromExpression(e.Right)...)
+		return vars
+
+	case *IRAddressExpression:
+		return []*Symbol{e.Var}
+
+	}
+
+	return nil
+}
+
+
 func extractVarsFromExpression(expression IRExpression) []*Symbol {
 	switch e := expression.(type) {
 	case *IRNumberExpression:
@@ -361,6 +378,10 @@ func analyzeReachingDefinition(statement IRStatement, inState BlockState) BlockS
 	switch s := statement.(type) {
 	case *IRAssignmentStatement:
 		inState[s.Var] = []IRStatement{s}
+		symbols := extractAddressVarsFromExpression(s.Expression)
+		for _, symbol := range symbols {
+			inState[symbol] = append(inState[symbol], s)
+		}
 
 	case *IRReadStatement:
 		inState[s.Dest] = []IRStatement{s}
@@ -372,6 +393,7 @@ func analyzeReachingDefinition(statement IRStatement, inState BlockState) BlockS
 
 	case *IRCallStatement:
 		inState[s.Dest] = []IRStatement{s}
+
 	}
 
 	return inState
