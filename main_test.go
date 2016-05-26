@@ -21,7 +21,7 @@ func TestSimulateExample(t *testing.T) {
 		{"example/fib.sc", "89"},
 		{"example/global_var.sc", "11"},
 		{"example/if_test.sc", ""},
-		{"example/pointer_test.sc", ""},
+		{"example/pointer_test.sc", "1"},
 		{"example/optimize_constant.sc", "1"},
 		{"example/bubble_sort.sc", "12345678"},
 		{"example/quick_sort.sc", "12345678"},
