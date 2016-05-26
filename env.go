@@ -39,7 +39,7 @@ func (env *Env) Add(symbol *Symbol) error {
 		if found.Kind == "proto" && (symbol.Kind == "fun" || symbol.Kind == "proto") {
 			functionType, _ := found.Type.(FunctionType)
 			if symbol.Type.String() != functionType.String() {
-				return fmt.Errorf("prototype mismatch error: function `%v`: `%v` != `%v`", name , functionType, symbol.Type)
+				return fmt.Errorf("prototype mismatch error: function `%v`: `%v` != `%v`", name, functionType, symbol.Type)
 			}
 		}
 	}

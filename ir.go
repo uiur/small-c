@@ -599,7 +599,7 @@ func compileIRExpression(expression Expression) (IRExpression, []*IRVariableDecl
 
 				decls = append(decls, rightDecls...)
 				statements := append(beforeRight,
-					&IRAssignmentStatement {
+					&IRAssignmentStatement{
 						Var:        symbol,
 						Expression: right,
 					},

@@ -58,7 +58,6 @@ func Walk(statement Statement) Statement {
 			whileBody = append(whileBody, &ExpressionStatement{Value: WalkExpression(s.Loop)})
 		}
 
-
 		var condition Expression
 		if s.Condition != nil {
 			condition = WalkExpression(s.Condition)

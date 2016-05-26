@@ -187,7 +187,6 @@ func extractAddressVarsFromExpression(expression IRExpression) []*Symbol {
 	return nil
 }
 
-
 func extractVarsFromExpression(expression IRExpression) []*Symbol {
 	switch e := expression.(type) {
 	case *IRNumberExpression:

@@ -3,10 +3,10 @@ package main
 import (
 	"io/ioutil"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
-	"path/filepath"
 )
 
 func TestSimulateExample(t *testing.T) {
@@ -64,7 +64,6 @@ func TestSampleOk(t *testing.T) {
 		testOk(t, sampleFile)
 	}
 }
-
 
 func TestSampleNg(t *testing.T) {
 	sampleFiles, _ := filepath.Glob("sample/ng*.sc")
