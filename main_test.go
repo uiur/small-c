@@ -29,6 +29,7 @@ func TestSimulateExample(t *testing.T) {
 		{"example/gcd.sc", "21"},
 		{"example/prime.sc", "2 3 5 7 11 13 17 19 23 29 "},
 		{"example/emoji.sc", "45"},
+		{"example/fizzbuzz.sc", "1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 17 Fizz 19 Buzz Fizz 22 23 Fizz Buzz 26 Fizz 28 29 FizzBuzz "},
 	}
 
 	for _, example := range examples {
