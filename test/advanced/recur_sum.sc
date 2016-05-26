@@ -10,9 +10,9 @@ void init_val() {
 int sum(int *arr) {
   int x;
 
-  if((x = *arr) != 0)
+  if((x = *arr) != 0) {
     return x + sum(arr + 1);
-  else
+  } else
     return 0;
 }
 
@@ -28,5 +28,5 @@ int sum2(int *arr, int acc) {
 void main() {
   init_val();
   print(sum(val) == 20100 &&
-        sum2(val, 0) == 20100);
+       sum2(val, 0) == 20100);
 }

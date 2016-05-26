@@ -193,11 +193,13 @@ func typeOfExpression(expression Expression) (SymbolType, error) {
 		return BasicType{Name: "int"}, nil
 
 	case *IdentifierExpression:
-		switch e.Symbol.Type.(type) {
+		switch t := e.Symbol.Type.(type) {
 		case ArrayType:
-			return Pointer(Int()), nil
+			return Pointer(t.Value), nil
+
 		default:
 			return e.Symbol.Type, nil
+
 		}
 
 	case *ExpressionList:

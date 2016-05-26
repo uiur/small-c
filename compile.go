@@ -312,7 +312,7 @@ func assignBinaryOperation(register string, operator string, left string, right 
 			li(register, 1),
 			fmt.Sprintf("j %s", endLabel),
 			falseLabel + ":",
-			li(register, 1),
+			li(register, 0),
 			endLabel + ":",
 		}
 
