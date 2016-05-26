@@ -325,6 +325,18 @@ func TestCheckVoidType(t *testing.T) {
 			t.Errorf("expect void error, but nil")
 		}
 	}
+
+	{
+		statements := ast(`
+      int f(void a) {
+      }
+    `)
+
+		err := CheckType(statements)
+		if err == nil {
+			t.Errorf("expect void error, but nil")
+		}
+	}
 }
 
 func TestTypeSize(t *testing.T) {

@@ -118,6 +118,18 @@ func CheckTypeOfStatement(statement Statement) error {
 		return nil
 
 	case *FunctionDefinition:
+		identifier := findIdentifierExpression(s.Identifier)
+		funcType, _ := identifier.Symbol.Type.(FunctionType)
+		for _, argType := range funcType.Args {
+			isVoid := strings.Contains(argType.String(), "void")
+			if isVoid {
+				return SemanticError{
+					Pos: s.Pos(),
+					Err: fmt.Errorf("type error: void pointer is not allowed"),
+				}
+			}
+		}
+
 		return CheckTypeOfStatement(s.Statement)
 
 	case *ExpressionStatement:
