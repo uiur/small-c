@@ -34,10 +34,9 @@ func Optimize(program *IRProgram) *IRProgram {
 	for i, f := range program.Functions {
 		statements := flatStatement(f)
 
-		blocks := splitStatemetsIntoBlocks(statements)
+		blocks := splitStatementsIntoBlocks(statements)
 
 		buildDataflowGraph(blocks)
-		searchReachingDefinitions(blocks)
 		blockOut := searchReachingDefinitions(blocks)
 		allStatementState := reachingDefinitionsOfStatements(blocks, blockOut, statements)
 
@@ -411,7 +410,7 @@ func analyzeReachingDefinition(statement IRStatement, inState BlockState) BlockS
 	return inState
 }
 
-func splitStatemetsIntoBlocks(statements []IRStatement) []*DataflowBlock {
+func splitStatementsIntoBlocks(statements []IRStatement) []*DataflowBlock {
 	var blocks []*DataflowBlock
 	block := &DataflowBlock{}
 	for _, statement := range statements {
