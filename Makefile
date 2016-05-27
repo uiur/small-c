@@ -23,7 +23,7 @@ example: $(destfiles)
 example/%.s: example/%.sc exec
 	./small-c $< > $@
 
-report: report/1.pdf report/2.pdf
+report: report/1.pdf report/2.pdf report/final.pdf
 
 report/%.pdf: %.dvi
 	dvipdfmx -o $@ $<
