@@ -1,7 +1,7 @@
 all: exec
 
 exec: deps parser.go
-	go build
+	go build -o small-c
 
 deps:
 	go get -d -v

@@ -1,3 +1,3 @@
 #!/bin/sh
-SCC_OPTION='-s /usr/local/bin/spim -c ./small-c'
+SCC_OPTION='-s /usr/local/bin/spim -c ./src/small-c'
 src/scc -e ${SCC_OPTION} $*
